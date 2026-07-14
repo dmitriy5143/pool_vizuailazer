@@ -45,7 +45,7 @@ export function buildPrompt({ params, zone, variantIndex = null, feedback = "" }
     zone
       ? "Reference image #1 is the original photo. Reference image #2 is a black-and-white rectangular placement mask, not a design reference: white marks the only editable pool placement area, black marks the area to preserve. The requested pool shape must fit inside this rectangular edit zone."
       : "",
-    "Use the original photo as the primary reference. Use the mask and coordinates only to locate the editable area; do not draw the mask, border, guide colors, labels, or UI overlays into the output.",
+    "Use the original photo as the primary reference. Use the mask and coordinates as the user's intended visible pool footprint and placement area; do not treat them as a loose suggestion. Do not draw the mask, border, guide colors, labels, or UI overlays into the output.",
     `Pool dimensions requested: ${params.lengthM || "not specified"}m x ${params.widthM || "not specified"}m.`,
     `Pool shape: ${params.shape || "rectangular"}.`,
     `Design style: ${styleDescription}.`,

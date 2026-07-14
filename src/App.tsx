@@ -148,6 +148,14 @@ type DraftRect = {
   currentY: number;
 };
 
+type CalibrationLine = {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  meters: string;
+};
+
 type MoveRect = DraftRect & {
   origin: Zone;
 };
@@ -444,6 +452,27 @@ function toAspectRect(rect: DraftRect, imageSize: { width: number; height: numbe
   );
 }
 
+function toFreeRect(rect: DraftRect, imageSize: { width: number; height: number }): Zone {
+  const startX = rect.startX * imageSize.width;
+  const startY = rect.startY * imageSize.height;
+  const pointerX = rect.currentX * imageSize.width;
+  const pointerY = rect.currentY * imageSize.height;
+  const x = Math.min(startX, pointerX);
+  const y = Math.min(startY, pointerY);
+  const width = Math.abs(pointerX - startX);
+  const height = Math.abs(pointerY - startY);
+
+  return zoneFromPixels(
+    {
+      x,
+      y,
+      width: Math.max(1, width),
+      height: Math.max(1, height)
+    },
+    imageSize
+  );
+}
+
 function zoneToStyle(zone: Zone | null) {
   if (!zone) return undefined;
   return {
@@ -494,6 +523,18 @@ function resizeZone(rect: ResizeRect, imageSize: { width: number; height: number
   );
 }
 
+function resizeZoneFree(rect: ResizeRect, imageSize: { width: number; height: number }): Zone {
+  return toFreeRect(
+    {
+      startX: rect.anchorX,
+      startY: rect.anchorY,
+      currentX: rect.currentX,
+      currentY: rect.currentY
+    },
+    imageSize
+  );
+}
+
 function oppositeAnchor(zone: Zone, corner: ResizeCorner) {
   const left = zone.xPct;
   const top = zone.yPct;
@@ -537,6 +578,66 @@ function fitZoneToParamsChange(
   nextParams: typeof defaultParams,
 ): Zone {
   return fitZoneToAspect(zone, imageSize, poolAspectFromParams(nextParams));
+}
+
+function calibrationDistancePx(line: CalibrationLine | DraftRect | null, imageSize: { width: number; height: number }) {
+  if (!line) return 0;
+  const endX = "endX" in line ? line.endX : line.currentX;
+  const endY = "endY" in line ? line.endY : line.currentY;
+  const dx = (endX - line.startX) * imageSize.width;
+  const dy = (endY - line.startY) * imageSize.height;
+  return Math.hypot(dx, dy);
+}
+
+function calibrationPixelsPerMeter(line: CalibrationLine | null, imageSize: { width: number; height: number }) {
+  const meters = parsePositiveNumber(line?.meters || "", 0);
+  const distance = calibrationDistancePx(line, imageSize);
+  if (!Number.isFinite(meters) || meters <= 0 || distance < 12) return null;
+  return distance / meters;
+}
+
+function zoneFromCalibratedParams(
+  currentZone: Zone,
+  imageSize: { width: number; height: number },
+  nextParams: typeof defaultParams,
+  calibration: CalibrationLine
+) {
+  const pxPerMeter = calibrationPixelsPerMeter(calibration, imageSize);
+  if (!pxPerMeter) return fitZoneToParamsChange(currentZone, imageSize, nextParams);
+  const centerX = (currentZone.xPct + currentZone.widthPct / 2) * imageSize.width;
+  const centerY = (currentZone.yPct + currentZone.heightPct / 2) * imageSize.height;
+  let widthPx = clamp(parsePositiveNumber(nextParams.lengthM, 7) * pxPerMeter, 20, imageSize.width);
+  let heightPx = clamp(parsePositiveNumber(nextParams.widthM, 3) * pxPerMeter, 20, imageSize.height);
+  const fitScale = Math.min(1, imageSize.width / widthPx, imageSize.height / heightPx);
+  widthPx *= fitScale;
+  heightPx *= fitScale;
+
+  return zoneFromPixels(
+    {
+      x: centerX - widthPx / 2,
+      y: centerY - heightPx / 2,
+      width: widthPx,
+      height: heightPx
+    },
+    imageSize
+  );
+}
+
+function paramsFromCalibratedZone(
+  nextZone: Zone,
+  imageSize: { width: number; height: number },
+  calibration: CalibrationLine,
+  currentParams: typeof defaultParams
+) {
+  const pxPerMeter = calibrationPixelsPerMeter(calibration, imageSize);
+  if (!pxPerMeter) return currentParams;
+  const lengthM = clamp((nextZone.widthPct * imageSize.width) / pxPerMeter, 0.5, 50);
+  const widthM = clamp((nextZone.heightPct * imageSize.height) / pxPerMeter, 0.5, 25);
+  return {
+    ...currentParams,
+    lengthM: formatMeterValue(lengthM),
+    widthM: formatMeterValue(widthM)
+  };
 }
 
 function formatMeterValue(value: number) {
@@ -847,6 +948,10 @@ export default function App() {
   const [draft, setDraft] = useState<DraftRect | null>(null);
   const [move, setMove] = useState<MoveRect | null>(null);
   const [resize, setResize] = useState<ResizeRect | null>(null);
+  const [editMode, setEditMode] = useState<"pool" | "calibration">("pool");
+  const [calibration, setCalibration] = useState<CalibrationLine | null>(null);
+  const [calibrationDraft, setCalibrationDraft] = useState<DraftRect | null>(null);
+  const [calibrationMeters, setCalibrationMeters] = useState("5");
   const [imageSize, setImageSize] = useState({ width: 1280, height: 820 });
   const [taskTitle, setTaskTitle] = useState("Новая визуализация");
   const [taskNotes, setTaskNotes] = useState("");
@@ -878,6 +983,24 @@ export default function App() {
   const selectedCaseUi = uiCase(selectedTestCase);
   const selectedTaskCaseUi = selectedTask ? uiCase(testCases.find((item) => item.caseId === selectedTask.caseId)) : null;
   const poolAspect = useMemo(() => poolAspectFromParams(params), [params.lengthM, params.widthM]);
+  const calibrationPxPerMeter = useMemo(() => calibrationPixelsPerMeter(calibration, imageSize), [calibration, imageSize]);
+  const calibrationLabel = calibrationPxPerMeter ? `${Math.round(calibrationPxPerMeter)} px/м` : "Без масштаба";
+  const visibleCalibration = useMemo<CalibrationLine | null>(() => (
+    calibrationDraft
+      ? {
+          startX: calibrationDraft.startX,
+          startY: calibrationDraft.startY,
+          endX: calibrationDraft.currentX,
+          endY: calibrationDraft.currentY,
+          meters: calibrationMeters
+        }
+      : calibration
+  ), [calibration, calibrationDraft, calibrationMeters]);
+  const stageHintText = editMode === "calibration"
+    ? "Проведите линию известной длины."
+    : calibration
+      ? "Контур = маска. Размер считается от масштаба."
+      : "Контур = маска. Без масштаба размер визуальный.";
 
   function taskTitleForUi(task: GenerationTask) {
     const copy = uiCase(testCases.find((item) => item.caseId === task.caseId));
@@ -927,16 +1050,17 @@ export default function App() {
   }, [selectedTask?.id]);
 
   const activeZone = useMemo(() => {
-    if (draft) return toAspectRect(draft, imageSize, poolAspect);
+    if (draft) return calibration ? toFreeRect(draft, imageSize) : toAspectRect(draft, imageSize, poolAspect);
     if (move) return moveZone(move, imageSize);
-    if (resize) return resizeZone(resize, imageSize, poolAspect);
+    if (resize) return calibration ? resizeZoneFree(resize, imageSize) : resizeZone(resize, imageSize, poolAspect);
     return zone;
-  }, [draft, imageSize, move, poolAspect, resize, zone]);
+  }, [calibration, draft, imageSize, move, poolAspect, resize, zone]);
 
   const displayParams = useMemo(() => {
+    if (calibration && activeZone && (draft || resize)) return paramsFromCalibratedZone(activeZone, imageSize, calibration, params);
     if (resize && activeZone) return paramsFromZoneScale(resize.origin, activeZone, resize.originParams);
     return params;
-  }, [activeZone, params, resize]);
+  }, [activeZone, calibration, draft, imageSize, params, resize]);
 
   const readiness = useMemo(() => {
     const lengthM = parsePositiveNumber(params.lengthM, 0);
@@ -965,8 +1089,32 @@ export default function App() {
     const nextParams = { ...params, [name]: value };
     setParams(nextParams);
     if (name === "lengthM" || name === "widthM") {
-      setZone((current) => current ? fitZoneToParamsChange(current, imageSize, nextParams) : current);
+      setZone((current) =>
+        current
+          ? calibration
+            ? zoneFromCalibratedParams(current, imageSize, nextParams, calibration)
+            : fitZoneToParamsChange(current, imageSize, nextParams)
+          : current
+      );
     }
+  }
+
+  function updateCalibrationMeters(value: string) {
+    setCalibrationMeters(value);
+    setCalibration((current) => {
+      if (!current) return current;
+      const nextCalibration = { ...current, meters: value };
+      if (parsePositiveNumber(value, 0) > 0) {
+        setZone((currentZone) => currentZone ? zoneFromCalibratedParams(currentZone, imageSize, params, nextCalibration) : currentZone);
+      }
+      return nextCalibration;
+    });
+  }
+
+  function resetCalibration() {
+    setCalibration(null);
+    setCalibrationDraft(null);
+    setEditMode("pool");
   }
 
   function showNotice(message: string) {
@@ -1064,6 +1212,8 @@ export default function App() {
     setDraft(null);
     setMove(null);
     setResize(null);
+    setCalibrationDraft(null);
+    setEditMode("pool");
     if (clearTestCase) setSelectedTestCaseId("");
     if (clearTestCase) {
       caseLoadSeqRef.current += 1;
@@ -1071,6 +1221,7 @@ export default function App() {
     }
     setPhoto(file);
     if (resetZone) setZone(null);
+    if (resetZone) setCalibration(null);
     setError("");
     setImageSize({ width: 1280, height: 820 });
     if (photoUrl) URL.revokeObjectURL(photoUrl);
@@ -1131,6 +1282,19 @@ export default function App() {
     const position = getPointerPosition(event);
     if (!position) return;
     event.currentTarget.setPointerCapture(event.pointerId);
+    if (editMode === "calibration") {
+      beginDraftEdit();
+      setDraft(null);
+      setMove(null);
+      setResize(null);
+      setCalibrationDraft({
+        startX: position.x,
+        startY: position.y,
+        currentX: position.x,
+        currentY: position.y
+      });
+      return;
+    }
     const resizeCorner = resizeCornerAtPosition(position, zone);
     if (resizeCorner) {
       startResize(resizeCorner, position, event.pointerId, event.currentTarget);
@@ -1160,9 +1324,13 @@ export default function App() {
   }
 
   function onPointerMove(event: PointerEvent<HTMLDivElement>) {
-    if (!draft && !move && !resize) return;
+    if (!draft && !move && !resize && !calibrationDraft) return;
     const position = getPointerPosition(event);
     if (!position) return;
+    if (calibrationDraft) {
+      setCalibrationDraft((current) => current ? { ...current, currentX: position.x, currentY: position.y } : null);
+      return;
+    }
     if (resize) {
       setResize((current) => current ? { ...current, currentX: position.x, currentY: position.y } : null);
       return;
@@ -1176,12 +1344,39 @@ export default function App() {
 
   function onPointerUp(event?: PointerEvent<HTMLDivElement>) {
     const position = event ? getPointerPosition(event) : null;
+    if (calibrationDraft) {
+      const finalDraft = position ? { ...calibrationDraft, currentX: position.x, currentY: position.y } : calibrationDraft;
+      const metersOk = parsePositiveNumber(calibrationMeters, 0) > 0;
+      if (calibrationDistancePx(finalDraft, imageSize) >= 12 && metersOk) {
+        const nextCalibration = {
+          startX: finalDraft.startX,
+          startY: finalDraft.startY,
+          endX: finalDraft.currentX,
+          endY: finalDraft.currentY,
+          meters: calibrationMeters
+        };
+        setCalibration(nextCalibration);
+        setZone((current) => current ? zoneFromCalibratedParams(current, imageSize, params, nextCalibration) : current);
+        setEditMode("pool");
+        setError("");
+      } else if (!metersOk) {
+        setError("Укажите длину линии в метрах.");
+      } else {
+        setError("Проведите линию чуть длиннее.");
+      }
+      setCalibrationDraft(null);
+      return;
+    }
     if (resize) {
       const finalResize = position ? { ...resize, currentX: position.x, currentY: position.y } : resize;
-      const nextZone = resizeZone(finalResize, imageSize, poolAspect);
+      const nextZone = calibration ? resizeZoneFree(finalResize, imageSize) : resizeZone(finalResize, imageSize, poolAspect);
       if (nextZone.widthPct >= 0.04 && nextZone.heightPct >= 0.04) {
         setZone(nextZone);
-        setParams(paramsFromZoneScale(finalResize.origin, nextZone, finalResize.originParams));
+        setParams(
+          calibration
+            ? paramsFromCalibratedZone(nextZone, imageSize, calibration, finalResize.originParams)
+            : paramsFromZoneScale(finalResize.origin, nextZone, finalResize.originParams)
+        );
       }
       setResize(null);
       return;
@@ -1194,8 +1389,11 @@ export default function App() {
     }
     if (!draft) return;
     const finalDraft = position ? { ...draft, currentX: position.x, currentY: position.y } : draft;
-    const nextZone = toAspectRect(finalDraft, imageSize, poolAspect);
-    if (nextZone.widthPct >= 0.04 && nextZone.heightPct >= 0.04) setZone(nextZone);
+    const nextZone = calibration ? toFreeRect(finalDraft, imageSize) : toAspectRect(finalDraft, imageSize, poolAspect);
+    if (nextZone.widthPct >= 0.04 && nextZone.heightPct >= 0.04) {
+      setZone(nextZone);
+      if (calibration) setParams(paramsFromCalibratedZone(nextZone, imageSize, calibration, params));
+    }
     setDraft(null);
   }
 
@@ -1225,10 +1423,14 @@ export default function App() {
     if (!resize) return;
     const position = event ? getPointerPosition(event) : null;
     const finalResize = position ? { ...resize, currentX: position.x, currentY: position.y } : resize;
-    const nextZone = resizeZone(finalResize, imageSize, poolAspect);
+    const nextZone = calibration ? resizeZoneFree(finalResize, imageSize) : resizeZone(finalResize, imageSize, poolAspect);
     if (nextZone.widthPct >= 0.04 && nextZone.heightPct >= 0.04) {
       setZone(nextZone);
-      setParams(paramsFromZoneScale(finalResize.origin, nextZone, finalResize.originParams));
+      setParams(
+        calibration
+          ? paramsFromCalibratedZone(nextZone, imageSize, calibration, finalResize.originParams)
+          : paramsFromZoneScale(finalResize.origin, nextZone, finalResize.originParams)
+      );
     }
     setResize(null);
   }
@@ -1245,6 +1447,9 @@ export default function App() {
       const copy = uiCase(testCase);
       const nextParams = uiCaseParams(testCase);
       setActivePhoto(file, { clearTestCase: false, resetZone: false, clearSelectedTask: false });
+      setCalibration(null);
+      setCalibrationDraft(null);
+      setEditMode("pool");
       setParams(nextParams);
       setVariants(testCase.variants || 3);
       setZone(fitZoneToAspect(testCase.zone, { width: testCase.zone.imageWidth, height: testCase.zone.imageHeight }, poolAspectFromParams(nextParams)));
@@ -1267,6 +1472,9 @@ export default function App() {
     setDraft(null);
     setMove(null);
     setResize(null);
+    setCalibration(null);
+    setCalibrationDraft(null);
+    setEditMode("pool");
     setError("");
     if (!caseId) {
       setLoadingCase(false);
@@ -1686,6 +1894,46 @@ export default function App() {
             </div>
           ) : null}
 
+          {photoUrl ? (
+            <div className="calibration-tools">
+              <div className="segmented-control" aria-label="Режим разметки">
+                <button
+                  type="button"
+                  className={editMode === "pool" ? "active" : ""}
+                  onClick={() => {
+                    setEditMode("pool");
+                    setCalibrationDraft(null);
+                  }}
+                >
+                  Контур
+                </button>
+                <button
+                  type="button"
+                  className={editMode === "calibration" ? "active" : ""}
+                  onClick={() => {
+                    setEditMode("calibration");
+                    setDraft(null);
+                    setMove(null);
+                    setResize(null);
+                  }}
+                >
+                  Калибровка
+                </button>
+              </div>
+              <label>
+                <span>Линия, м</span>
+                <input inputMode="decimal" value={calibrationMeters} onChange={(event) => updateCalibrationMeters(event.target.value)} />
+              </label>
+              <span className={`calibration-status ${calibration ? "ready" : ""}`}>{calibrationLabel}</span>
+              {calibration ? (
+                <button className="icon-text-button" type="button" onClick={resetCalibration}>
+                  <RotateCcw size={15} />
+                  Сброс
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className={`image-stage ${photoUrl ? "ready" : ""}`}>
             {photoUrl ? (
               <div
@@ -1698,6 +1946,7 @@ export default function App() {
                   setDraft(null);
                   setMove(null);
                   setResize(null);
+                  setCalibrationDraft(null);
                 }}
               >
                 <img
@@ -1725,6 +1974,29 @@ export default function App() {
                     );
                   }}
                 />
+                {visibleCalibration ? (
+                  <svg className="calibration-overlay" aria-hidden="true">
+                    <line
+                      x1={`${visibleCalibration.startX * 100}%`}
+                      y1={`${visibleCalibration.startY * 100}%`}
+                      x2={`${visibleCalibration.endX * 100}%`}
+                      y2={`${visibleCalibration.endY * 100}%`}
+                    />
+                    <circle cx={`${visibleCalibration.startX * 100}%`} cy={`${visibleCalibration.startY * 100}%`} r="5" />
+                    <circle cx={`${visibleCalibration.endX * 100}%`} cy={`${visibleCalibration.endY * 100}%`} r="5" />
+                  </svg>
+                ) : null}
+                {visibleCalibration ? (
+                  <span
+                    className="calibration-badge"
+                    style={{
+                      left: `${((visibleCalibration.startX + visibleCalibration.endX) / 2) * 100}%`,
+                      top: `${((visibleCalibration.startY + visibleCalibration.endY) / 2) * 100}%`
+                    }}
+                  >
+                    {visibleCalibration.meters || "?"} м
+                  </span>
+                ) : null}
                 {activeZone ? (
                   <div className="selection" style={zoneToStyle(activeZone)}>
                     <div className="pool-preview">
@@ -1748,7 +2020,7 @@ export default function App() {
                     </span>
                   </div>
                 ) : null}
-                <div className="stage-hint"><Target size={13} /> Контур = маска. Внутри - двигать, углы - размер.</div>
+                <div className="stage-hint"><Target size={13} /> {stageHintText}</div>
               </div>
             ) : (
               <div className="empty-stage">
@@ -1761,9 +2033,16 @@ export default function App() {
           <div className="input-meta">
             <span>{photo ? `Фото ${imageSize.width} x ${imageSize.height} px` : "Нет фото"}</span>
             <span>{activeZone ? "Маска = видимый контур" : "Нет маски"}</span>
+            <span>{calibration ? "Масштаб включен" : "Размер визуальный"}</span>
             <span>Размер {displayParams.lengthM || "?"} x {displayParams.widthM || "?"} м · {shapeLabel(displayParams.shape)}</span>
           </div>
-          {activeZone ? <div className="mask-note">В генерацию уйдет этот контур и эти размеры.</div> : null}
+          {activeZone ? (
+            <div className="mask-note">
+              {calibration
+                ? "Контур считается от калибровочной линии. В генерацию уйдет этот контур и эти размеры."
+                : "Без калибровки метры задают пропорцию и смысл, а размер выбирается визуально."}
+            </div>
+          ) : null}
           {qualityWarning ? <div className="soft-warning">{qualityWarning}</div> : null}
         </section>
 
