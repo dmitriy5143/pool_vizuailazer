@@ -1,0 +1,24 @@
+[
+  {
+    "status": "succeeded",
+    "model": "bytedance-seed/seedream-4.5",
+    "caseId": "TC-09",
+    "historyId": "489772c2-3aa1-43a4-b9e2-2815e6004b19",
+    "images": [
+      "/generated/489772c2-3aa1-43a4-b9e2-2815e6004b19-1.jpg",
+      "/generated/489772c2-3aa1-43a4-b9e2-2815e6004b19-2.jpg",
+      "/generated/489772c2-3aa1-43a4-b9e2-2815e6004b19-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 54072,
+    "costUsd": 0.12,
+    "warnings": []
+  },
+  {
+    "status": "failed",
+    "model": "openai/gpt-image-2",
+    "caseId": "TC-09",
+    "latencyMs": 121477,
+    "error": "OpenRouter network error: fetch failed: read ECONNRESET"
+  }
+]

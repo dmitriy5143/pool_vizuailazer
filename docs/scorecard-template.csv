@@ -1,0 +1,2 @@
+run_id,date,model,case_id,photo_filename,variant_count,latency_sec,cost_usd,preservation_score,zone_score,realism_score,params_score,artifact_score,sendable_yes_no,best_variant,regen_needed_yes_no,notes,output_paths
+RUN-001,YYYY-MM-DD,model-id,TC-01,photo-01.jpg,3,,,,,,,,,,,

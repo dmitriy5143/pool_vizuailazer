@@ -1,0 +1,6 @@
+run_id,status,model,case_id,images,latency_sec,cost_usd,warnings,error,history_id
+"BAKEOFF-STAGE2-GEMINI-20260713T2315Z","succeeded","google/gemini-3.1-flash-image","TC-03","3","17","0.2059385","","","097a3b1f-0821-4de8-9ad0-443e963004a0"
+"BAKEOFF-STAGE2-GEMINI-20260713T2315Z","succeeded","google/gemini-3.1-flash-image","TC-09","3","16","0.20609000000000002","","","dd6ed136-5376-4bcc-b0d4-16ae78c98b29"
+"BAKEOFF-STAGE2-GEMINI-20260713T2315Z","succeeded","google/gemini-3.1-flash-image","TC-15","3","10.2","0.20639800000000003","","","e5eba39f-faca-410a-89c3-7523d8e49fea"
+"BAKEOFF-STAGE2-GEMINI-20260713T2315Z","succeeded","google/gemini-3.1-flash-image","TC-16","3","15","0.20598299999999997","","","4cdcd30e-b66e-49cd-880e-64e07661d9bc"
+"BAKEOFF-STAGE2-GEMINI-20260713T2315Z","succeeded","google/gemini-3.1-flash-image","TC-20","3","22.9","0.206021","","","403af90d-4d5e-47d4-a0e1-67b6090d2a89"

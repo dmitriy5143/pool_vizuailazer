@@ -1,0 +1,8 @@
+node_modules
+dist
+data
+.env
+.DS_Store
+.git
+npm-debug.log
+pnpm-debug.log

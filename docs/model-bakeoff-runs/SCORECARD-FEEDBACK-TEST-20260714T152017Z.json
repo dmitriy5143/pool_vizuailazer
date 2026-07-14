@@ -1,0 +1,83 @@
+{
+  "createdAt": "2026-07-14T15:20:17.316Z",
+  "model": "bytedance-seed/seedream-4.5",
+  "caseId": "TC-09",
+  "generic": {
+    "kind": "generic",
+    "requestId": "scorecard-test-generic-6ec6b569",
+    "latencySec": 58,
+    "image": "/generated/scorecard-test-generic-6ec6b569-1.jpg",
+    "providerUrl": null,
+    "costUsd": 0.04,
+    "usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 16384,
+      "total_tokens": 16384,
+      "cost": 0.04
+    },
+    "warnings": [],
+    "validation": {
+      "status": "passed",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 0,
+      "showCount": 1,
+      "summary": "Все варианты успешно прошли проверку."
+    },
+    "autoRating": {
+      "id": "scorecard-test-generic-6ec6b569-1",
+      "label": "A",
+      "preservation": 5,
+      "zone": 5,
+      "realism": 4,
+      "params": 4,
+      "artifacts": 5,
+      "sendable": true,
+      "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Стиль и материалы соответствуют запросу.",
+      "issues": [],
+      "confidence": 0.9,
+      "validator": "openrouter:google/gemini-2.5-flash",
+      "action": "show"
+    },
+    "feedback": "Строгие ограничения для перегенерации:\nНе повторять заблокированные или спорные композиции из прошлого запуска.\nСохранить исходный двор, забор, дом, деревья, ракурс камеры, освещение и цветность фото.\nДержать бассейн и все правки полностью внутри выделенной зоны.\nСвободный комментарий менеджера: Бассейн оказался на заборе. Исправь и сделай реалистично.\nИтог прошлой автоматической проверки: Предыдущий вариант заблокирован: бассейн попал на забор и вышел за маску."
+  },
+  "scorecard": {
+    "kind": "scorecard",
+    "requestId": "scorecard-test-scorecard-10531eb9",
+    "latencySec": 46.7,
+    "image": "/generated/scorecard-test-scorecard-10531eb9-1.jpg",
+    "providerUrl": null,
+    "costUsd": 0.04,
+    "usage": {
+      "prompt_tokens": 0,
+      "completion_tokens": 16384,
+      "total_tokens": 16384,
+      "cost": 0.04
+    },
+    "warnings": [],
+    "validation": {
+      "status": "passed",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 0,
+      "showCount": 1,
+      "summary": "Все варианты соответствуют требованиям."
+    },
+    "autoRating": {
+      "id": "scorecard-test-scorecard-10531eb9-1",
+      "label": "A",
+      "preservation": 5,
+      "zone": 5,
+      "realism": 5,
+      "params": 5,
+      "artifacts": 5,
+      "sendable": true,
+      "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Параметры бассейна соответствуют запросу.",
+      "issues": [],
+      "confidence": 1,
+      "validator": "openrouter:google/gemini-2.5-flash",
+      "action": "show"
+    },
+    "feedback": "Строгие ограничения для перегенерации:\nНе повторять заблокированные или спорные композиции из прошлого запуска.\nСохранить исходный двор, забор, дом, деревья, ракурс камеры, освещение и цветность фото.\nДержать бассейн и все правки полностью внутри выделенной зоны.\nСвободный комментарий менеджера: Перегенерировать аккуратнее.\nИтог прошлой автоматической проверки: Предыдущий вариант заблокирован: бассейн попал на забор и вышел за маску.\nвариант A: держать бассейн полностью внутри выделенной зоны, без захода на забор или дом\nвариант A: улучшить фотореализм, плоскость земли, тени, отражения и перспективу\nвариант A: точнее соблюдать форму, размеры, стиль и материалы бассейна\nвариант A: убрать артефакты, текстовые подписи, деформации геометрии и неестественную воду\nвариант A: не готов для показа клиенту\nвариант A, заметка менеджера: Бассейн залез на забор; нужен только на газоне внутри рамки, без новой мебели и лишней террасы."
+  }
+}

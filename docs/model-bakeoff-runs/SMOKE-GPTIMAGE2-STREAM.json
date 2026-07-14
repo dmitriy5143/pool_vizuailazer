@@ -1,0 +1,15 @@
+[
+  {
+    "status": "failed",
+    "model": "openai/gpt-image-2",
+    "caseId": "TC-13",
+    "latencyMs": 5480,
+    "error": "OpenRouter error 400: Streaming is not supported for image-to-image (edit) requests",
+    "payload": {
+      "error": {
+        "message": "Streaming is not supported for image-to-image (edit) requests",
+        "code": 400
+      }
+    }
+  }
+]

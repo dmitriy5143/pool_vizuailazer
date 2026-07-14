@@ -1,0 +1,17 @@
+[
+  {
+    "status": "succeeded",
+    "model": "bytedance-seed/seedream-4.5",
+    "caseId": "TC-13",
+    "historyId": "228b75a0-1816-4cbb-8ad6-234ddc2fbeec",
+    "images": [
+      "/generated/228b75a0-1816-4cbb-8ad6-234ddc2fbeec-1.jpg",
+      "/generated/228b75a0-1816-4cbb-8ad6-234ddc2fbeec-2.jpg",
+      "/generated/228b75a0-1816-4cbb-8ad6-234ddc2fbeec-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 34231,
+    "costUsd": 0.12,
+    "warnings": []
+  }
+]

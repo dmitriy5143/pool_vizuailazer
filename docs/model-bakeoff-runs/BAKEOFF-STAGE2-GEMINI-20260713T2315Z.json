@@ -1,0 +1,77 @@
+[
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-03",
+    "historyId": "097a3b1f-0821-4de8-9ad0-443e963004a0",
+    "images": [
+      "/generated/097a3b1f-0821-4de8-9ad0-443e963004a0-1.png",
+      "/generated/097a3b1f-0821-4de8-9ad0-443e963004a0-2.jpg",
+      "/generated/097a3b1f-0821-4de8-9ad0-443e963004a0-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 17017,
+    "costUsd": 0.2059385,
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-09",
+    "historyId": "dd6ed136-5376-4bcc-b0d4-16ae78c98b29",
+    "images": [
+      "/generated/dd6ed136-5376-4bcc-b0d4-16ae78c98b29-1.jpg",
+      "/generated/dd6ed136-5376-4bcc-b0d4-16ae78c98b29-2.png",
+      "/generated/dd6ed136-5376-4bcc-b0d4-16ae78c98b29-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 15957,
+    "costUsd": 0.20609000000000002,
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-15",
+    "historyId": "e5eba39f-faca-410a-89c3-7523d8e49fea",
+    "images": [
+      "/generated/e5eba39f-faca-410a-89c3-7523d8e49fea-1.jpg",
+      "/generated/e5eba39f-faca-410a-89c3-7523d8e49fea-2.jpg",
+      "/generated/e5eba39f-faca-410a-89c3-7523d8e49fea-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 10228,
+    "costUsd": 0.20639800000000003,
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-16",
+    "historyId": "4cdcd30e-b66e-49cd-880e-64e07661d9bc",
+    "images": [
+      "/generated/4cdcd30e-b66e-49cd-880e-64e07661d9bc-1.jpg",
+      "/generated/4cdcd30e-b66e-49cd-880e-64e07661d9bc-2.png",
+      "/generated/4cdcd30e-b66e-49cd-880e-64e07661d9bc-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 15018,
+    "costUsd": 0.20598299999999997,
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-20",
+    "historyId": "403af90d-4d5e-47d4-a0e1-67b6090d2a89",
+    "images": [
+      "/generated/403af90d-4d5e-47d4-a0e1-67b6090d2a89-1.png",
+      "/generated/403af90d-4d5e-47d4-a0e1-67b6090d2a89-2.jpg",
+      "/generated/403af90d-4d5e-47d4-a0e1-67b6090d2a89-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 22897,
+    "costUsd": 0.206021,
+    "warnings": []
+  }
+]

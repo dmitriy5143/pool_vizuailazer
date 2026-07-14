@@ -1,0 +1,281 @@
+[
+  {
+    "model": "bytedance-seed/seedream-4.5",
+    "runs": 6,
+    "failed": 0,
+    "images": 18,
+    "show": 14,
+    "review": 4,
+    "hide": 0,
+    "clientSafeRate": 77.8,
+    "gatedRate": 22.2,
+    "avgLatencySec": 31.9,
+    "totalCostUsd": 0.72,
+    "cases": [
+      {
+        "caseId": "TC-09",
+        "show": 3,
+        "review": 0,
+        "hide": 0,
+        "latencySec": 27.6,
+        "costUsd": 0.12,
+        "actions": [
+          "show",
+          "show",
+          "show"
+        ]
+      },
+      {
+        "caseId": "TC-14",
+        "show": 1,
+        "review": 2,
+        "hide": 0,
+        "latencySec": 34.5,
+        "costUsd": 0.12,
+        "actions": [
+          "show",
+          "review",
+          "review"
+        ]
+      },
+      {
+        "caseId": "TC-17",
+        "show": 2,
+        "review": 1,
+        "hide": 0,
+        "latencySec": 22.3,
+        "costUsd": 0.12,
+        "actions": [
+          "show",
+          "show",
+          "review"
+        ]
+      },
+      {
+        "caseId": "TC-20",
+        "show": 2,
+        "review": 1,
+        "hide": 0,
+        "latencySec": 40.7,
+        "costUsd": 0.12,
+        "actions": [
+          "show",
+          "show",
+          "review"
+        ]
+      },
+      {
+        "caseId": "TC-02",
+        "show": 3,
+        "review": 0,
+        "hide": 0,
+        "latencySec": 30.5,
+        "costUsd": 0.12,
+        "actions": [
+          "show",
+          "show",
+          "show"
+        ]
+      },
+      {
+        "caseId": "TC-03",
+        "show": 3,
+        "review": 0,
+        "hide": 0,
+        "latencySec": 35.8,
+        "costUsd": 0.12,
+        "actions": [
+          "show",
+          "show",
+          "show"
+        ]
+      }
+    ]
+  },
+  {
+    "model": "google/gemini-3.1-flash-image",
+    "runs": 6,
+    "failed": 0,
+    "images": 18,
+    "show": 13,
+    "review": 5,
+    "hide": 0,
+    "clientSafeRate": 72.2,
+    "gatedRate": 27.8,
+    "avgLatencySec": 17.6,
+    "totalCostUsd": 1.2376,
+    "cases": [
+      {
+        "caseId": "TC-09",
+        "show": 3,
+        "review": 0,
+        "hide": 0,
+        "latencySec": 15.2,
+        "costUsd": 0.2063215,
+        "actions": [
+          "show",
+          "show",
+          "show"
+        ]
+      },
+      {
+        "caseId": "TC-14",
+        "show": 3,
+        "review": 0,
+        "hide": 0,
+        "latencySec": 9.2,
+        "costUsd": 0.2065665,
+        "actions": [
+          "show",
+          "show",
+          "show"
+        ]
+      },
+      {
+        "caseId": "TC-17",
+        "show": 2,
+        "review": 1,
+        "hide": 0,
+        "latencySec": 13.6,
+        "costUsd": 0.2060515,
+        "actions": [
+          "show",
+          "show",
+          "review"
+        ]
+      },
+      {
+        "caseId": "TC-20",
+        "show": 2,
+        "review": 1,
+        "hide": 0,
+        "latencySec": 14.8,
+        "costUsd": 0.20632699999999998,
+        "actions": [
+          "show",
+          "show",
+          "review"
+        ]
+      },
+      {
+        "caseId": "TC-02",
+        "show": 0,
+        "review": 3,
+        "hide": 0,
+        "latencySec": 25.9,
+        "costUsd": 0.206152,
+        "actions": [
+          "review",
+          "review",
+          "review"
+        ]
+      },
+      {
+        "caseId": "TC-03",
+        "show": 3,
+        "review": 0,
+        "hide": 0,
+        "latencySec": 27.1,
+        "costUsd": 0.206176,
+        "actions": [
+          "show",
+          "show",
+          "show"
+        ]
+      }
+    ]
+  },
+  {
+    "model": "openai/gpt-image-1-mini",
+    "runs": 6,
+    "failed": 0,
+    "images": 18,
+    "show": 8,
+    "review": 4,
+    "hide": 6,
+    "clientSafeRate": 44.4,
+    "gatedRate": 55.6,
+    "avgLatencySec": 59.5,
+    "totalCostUsd": 0.9494,
+    "cases": [
+      {
+        "caseId": "TC-09",
+        "show": 0,
+        "review": 3,
+        "hide": 0,
+        "latencySec": 49,
+        "costUsd": 0.15843449999999998,
+        "actions": [
+          "review",
+          "review",
+          "review"
+        ]
+      },
+      {
+        "caseId": "TC-14",
+        "show": 0,
+        "review": 0,
+        "hide": 3,
+        "latencySec": 48.6,
+        "costUsd": 0.1584645,
+        "actions": [
+          "hide",
+          "hide",
+          "hide"
+        ]
+      },
+      {
+        "caseId": "TC-17",
+        "show": 0,
+        "review": 0,
+        "hide": 3,
+        "latencySec": 48.9,
+        "costUsd": 0.156372,
+        "actions": [
+          "hide",
+          "hide",
+          "hide"
+        ]
+      },
+      {
+        "caseId": "TC-20",
+        "show": 2,
+        "review": 1,
+        "hide": 0,
+        "latencySec": 48.6,
+        "costUsd": 0.158442,
+        "actions": [
+          "show",
+          "review",
+          "show"
+        ]
+      },
+      {
+        "caseId": "TC-02",
+        "show": 3,
+        "review": 0,
+        "hide": 0,
+        "latencySec": 54,
+        "costUsd": 0.15844950000000002,
+        "actions": [
+          "show",
+          "show",
+          "show"
+        ]
+      },
+      {
+        "caseId": "TC-03",
+        "show": 3,
+        "review": 0,
+        "hide": 0,
+        "latencySec": 107.9,
+        "costUsd": 0.1592325,
+        "actions": [
+          "show",
+          "show",
+          "show"
+        ]
+      }
+    ]
+  }
+]

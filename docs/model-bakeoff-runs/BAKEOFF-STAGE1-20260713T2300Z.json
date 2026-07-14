@@ -1,0 +1,92 @@
+[
+  {
+    "status": "succeeded",
+    "model": "openai/gpt-image-1-mini",
+    "caseId": "TC-14",
+    "historyId": "3f38d9ce-b48c-49d1-a349-51bb30ab3cfd",
+    "images": [
+      "/generated/3f38d9ce-b48c-49d1-a349-51bb30ab3cfd-1.png",
+      "/generated/3f38d9ce-b48c-49d1-a349-51bb30ab3cfd-2.png",
+      "/generated/3f38d9ce-b48c-49d1-a349-51bb30ab3cfd-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 46218,
+    "costUsd": 0.1572395,
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "openai/gpt-image-1-mini",
+    "caseId": "TC-17",
+    "historyId": "db67644b-56cf-49ea-a151-862bdedfa3b5",
+    "images": [
+      "/generated/db67644b-56cf-49ea-a151-862bdedfa3b5-1.png",
+      "/generated/db67644b-56cf-49ea-a151-862bdedfa3b5-2.png",
+      "/generated/db67644b-56cf-49ea-a151-862bdedfa3b5-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 45411,
+    "costUsd": 0.155147,
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "bytedance-seed/seedream-4.5",
+    "caseId": "TC-14",
+    "historyId": "ee4bffa0-99bf-4e6b-af20-c4163df45537",
+    "images": [
+      "/generated/ee4bffa0-99bf-4e6b-af20-c4163df45537-1.jpg",
+      "/generated/ee4bffa0-99bf-4e6b-af20-c4163df45537-2.jpg",
+      "/generated/ee4bffa0-99bf-4e6b-af20-c4163df45537-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 41508,
+    "costUsd": 0.12,
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "bytedance-seed/seedream-4.5",
+    "caseId": "TC-17",
+    "historyId": "709e4cdf-ffdd-49c5-bd83-023d526950e5",
+    "images": [
+      "/generated/709e4cdf-ffdd-49c5-bd83-023d526950e5-1.jpg",
+      "/generated/709e4cdf-ffdd-49c5-bd83-023d526950e5-2.jpg",
+      "/generated/709e4cdf-ffdd-49c5-bd83-023d526950e5-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 31809,
+    "costUsd": 0.12,
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-14",
+    "historyId": "8638913d-227c-4c56-b4d4-55c6323adb21",
+    "images": [
+      "/generated/8638913d-227c-4c56-b4d4-55c6323adb21-1.jpg",
+      "/generated/8638913d-227c-4c56-b4d4-55c6323adb21-2.jpg",
+      "/generated/8638913d-227c-4c56-b4d4-55c6323adb21-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 14320,
+    "costUsd": 0.20650649999999998,
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-17",
+    "historyId": "720720e2-c0af-4442-8a29-9f01097c00b1",
+    "images": [
+      "/generated/720720e2-c0af-4442-8a29-9f01097c00b1-1.jpg",
+      "/generated/720720e2-c0af-4442-8a29-9f01097c00b1-2.jpg",
+      "/generated/720720e2-c0af-4442-8a29-9f01097c00b1-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 12995,
+    "costUsd": 0.20572649999999998,
+    "warnings": []
+  }
+]

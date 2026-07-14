@@ -1,0 +1,2 @@
+run_id,status,model,case_id,images,latency_sec,cost_usd,warnings,error,history_id
+"SMOKE-GEMINI-TC13","succeeded","google/gemini-3.1-flash-image","TC-13","3","15.9","0.206187","","","8fba7a3e-f02b-4cfe-a5fc-9c98536b0915"

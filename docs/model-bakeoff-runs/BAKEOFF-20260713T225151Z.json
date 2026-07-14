@@ -1,0 +1,16 @@
+[
+  {
+    "status": "failed",
+    "model": "openai/gpt-image-2",
+    "caseId": "TC-13",
+    "latencyMs": 60502,
+    "error": "fetch failed"
+  },
+  {
+    "status": "failed",
+    "model": "openai/gpt-image-2",
+    "caseId": "TC-14",
+    "latencyMs": 60278,
+    "error": "fetch failed"
+  }
+]

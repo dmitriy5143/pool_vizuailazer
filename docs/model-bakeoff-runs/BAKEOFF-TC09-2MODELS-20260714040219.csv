@@ -1,0 +1,3 @@
+run_id,status,model,case_id,images,latency_sec,cost_usd,warnings,error,history_id
+"BAKEOFF-TC09-2MODELS-20260714040219","succeeded","bytedance-seed/seedream-4.5","TC-09","3","54.1","0.12","","","489772c2-3aa1-43a4-b9e2-2815e6004b19"
+"BAKEOFF-TC09-2MODELS-20260714040219","failed","openai/gpt-image-2","TC-09","0","121.5","","","OpenRouter network error: fetch failed: read ECONNRESET",""

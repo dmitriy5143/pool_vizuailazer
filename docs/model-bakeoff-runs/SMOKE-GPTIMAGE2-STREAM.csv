@@ -1,0 +1,2 @@
+run_id,status,model,case_id,images,latency_sec,cost_usd,warnings,error,history_id
+"SMOKE-GPTIMAGE2-STREAM","failed","openai/gpt-image-2","TC-13","0","5.5","","","OpenRouter error 400: Streaming is not supported for image-to-image (edit) requests",""

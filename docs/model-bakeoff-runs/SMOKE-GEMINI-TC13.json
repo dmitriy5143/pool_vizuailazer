@@ -1,0 +1,17 @@
+[
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-13",
+    "historyId": "8fba7a3e-f02b-4cfe-a5fc-9c98536b0915",
+    "images": [
+      "/generated/8fba7a3e-f02b-4cfe-a5fc-9c98536b0915-1.png",
+      "/generated/8fba7a3e-f02b-4cfe-a5fc-9c98536b0915-2.jpg",
+      "/generated/8fba7a3e-f02b-4cfe-a5fc-9c98536b0915-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 15924,
+    "costUsd": 0.206187,
+    "warnings": []
+  }
+]

@@ -1,0 +1,2 @@
+run_id,status,model,case_id,images,latency_sec,cost_usd,warnings,error,history_id
+"BAKEOFF-TC09-OPENAI-MINI-20260714040525","succeeded","openai/gpt-image-1-mini","TC-09","3","52.8","0.15719450000000001","","","229c69c4-b2d3-4f7d-a9ef-bdc17989d2a1"

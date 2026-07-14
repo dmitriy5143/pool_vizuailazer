@@ -1,0 +1,67 @@
+[
+  {
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-09",
+    "historyId": "7a976b77-c533-442b-bab6-ea2043e0bb7f",
+    "latencySec": 15.8,
+    "costUsd": 0.2062185,
+    "summary": {
+      "status": "blocked",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 1,
+      "reviewCount": 0,
+      "showCount": 2,
+      "summary": "Вариант A и C приемлемы, но вариант B полностью меняет исходное изображение и не соответствует запросу."
+    },
+    "variants": [
+      {
+        "label": "A",
+        "action": "show",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 5,
+        "sendable": true,
+        "issues": [],
+        "notes": "Бассейн хорошо вписан в зону, сохранена черно-белая гамма. Материалы и стиль соответствуют запросу. Вода выглядит немного мутной."
+      },
+      {
+        "label": "B",
+        "action": "hide",
+        "preservation": 1,
+        "zone": 5,
+        "realism": 1,
+        "params": 2,
+        "artifacts": 1,
+        "sendable": false,
+        "issues": [
+          "Изменение цвета изображения",
+          "Добавление посторонних объектов",
+          "Изменение освещения",
+          "Несоответствие стилю"
+        ],
+        "notes": "Изображение стало цветным, что полностью меняет исходный контекст. Добавлены шезлонги и освещение, что не запрашивалось. Стиль бассейна не соответствует 'natural'."
+      },
+      {
+        "label": "C",
+        "action": "show",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 3,
+        "artifacts": 5,
+        "sendable": true,
+        "issues": [],
+        "notes": "Бассейн хорошо вписан в зону, сохранена черно-белая гамма. Однако, ступеньки внутри бассейна не были запрошены, и зелень вдоль забора не так выражена, как хотелось бы. Вода выглядит немного мутной."
+      }
+    ],
+    "images": [
+      "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/7a976b77-c533-442b-bab6-ea2043e0bb7f-1.jpg",
+      "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/7a976b77-c533-442b-bab6-ea2043e0bb7f-2.png",
+      "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/7a976b77-c533-442b-bab6-ea2043e0bb7f-3.jpg"
+    ],
+    "mask": "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/7a976b77-c533-442b-bab6-ea2043e0bb7f-zone-mask.png",
+    "upload": "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/uploads/7a976b77-c533-442b-bab6-ea2043e0bb7f.jpg"
+  }
+]

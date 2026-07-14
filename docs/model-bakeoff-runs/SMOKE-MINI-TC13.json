@@ -1,0 +1,17 @@
+[
+  {
+    "status": "succeeded",
+    "model": "openai/gpt-image-1-mini",
+    "caseId": "TC-13",
+    "historyId": "ff9bc735-2866-40d8-8ef5-0e8697adafdc",
+    "images": [
+      "/generated/ff9bc735-2866-40d8-8ef5-0e8697adafdc-1.png",
+      "/generated/ff9bc735-2866-40d8-8ef5-0e8697adafdc-2.png",
+      "/generated/ff9bc735-2866-40d8-8ef5-0e8697adafdc-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 46661,
+    "costUsd": 0.157202,
+    "warnings": []
+  }
+]

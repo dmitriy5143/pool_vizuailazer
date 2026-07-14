@@ -1,0 +1,1419 @@
+[
+  {
+    "status": "succeeded",
+    "model": "bytedance-seed/seedream-4.5",
+    "caseId": "TC-09",
+    "historyId": "aa81019d-96ad-4176-839e-c5a1f5fa0057",
+    "images": [
+      "/generated/aa81019d-96ad-4176-839e-c5a1f5fa0057-1.jpg",
+      "/generated/aa81019d-96ad-4176-839e-c5a1f5fa0057-2.jpg",
+      "/generated/aa81019d-96ad-4176-839e-c5a1f5fa0057-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 27587,
+    "costUsd": 0.12,
+    "validation": {
+      "status": "passed",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 0,
+      "showCount": 3,
+      "summary": "Все варианты хорошо вписали бассейн в заданную зону, сохранив окружение и перспективу. Материалы и стиль соответствуют запросу."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "show"
+    ],
+    "autoRatings": [
+      {
+        "id": "aa81019d-96ad-4176-839e-c5a1f5fa0057-1",
+        "label": "A",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "aa81019d-96ad-4176-839e-c5a1f5fa0057-2",
+        "label": "B",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "aa81019d-96ad-4176-839e-c5a1f5fa0057-3",
+        "label": "C",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "bytedance-seed/seedream-4.5",
+    "caseId": "TC-14",
+    "historyId": "5828cd2b-744a-4342-9029-12d323b0bcf7",
+    "images": [
+      "/generated/5828cd2b-744a-4342-9029-12d323b0bcf7-1.jpg",
+      "/generated/5828cd2b-744a-4342-9029-12d323b0bcf7-2.jpg",
+      "/generated/5828cd2b-744a-4342-9029-12d323b0bcf7-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 34502,
+    "costUsd": 0.12,
+    "validation": {
+      "status": "review",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 2,
+      "showCount": 1,
+      "summary": "Вариант A соответствует всем критериям и готов к показу. Варианты B и C требуют доработки из-за несоответствия размеров и материалов, а также наличия нежелательного текста."
+    },
+    "validationActions": [
+      "show",
+      "review",
+      "review"
+    ],
+    "autoRatings": [
+      {
+        "id": "5828cd2b-744a-4342-9029-12d323b0bcf7-1",
+        "label": "A",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Размеры бассейна соответствуют запросу.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "5828cd2b-744a-4342-9029-12d323b0bcf7-2",
+        "label": "B",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 3,
+        "artifacts": 4,
+        "sendable": false,
+        "notes": "Бассейн хорошо вписан в зону, но размеры не соответствуют запросу. Присутствует нежелательный текст на изображении.",
+        "issues": [
+          "Размеры бассейна не соответствуют запросу (3.5м вместо 5.5м)."
+        ],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      },
+      {
+        "id": "5828cd2b-744a-4342-9029-12d323b0bcf7-3",
+        "label": "C",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 3,
+        "artifacts": 4,
+        "sendable": false,
+        "notes": "Бассейн хорошо вписан в зону, но размеры не соответствуют запросу. Присутствует нежелательный текст на изображении. Материалы патио частично не соответствуют запросу.",
+        "issues": [
+          "Размеры бассейна не соответствуют запросу (дополнительные размеры 1.5м, x 2.5м).",
+          "Присутствует нежелательный текст на изображении.",
+          "Часть патио выполнена из дерева, что не соответствует запросу 'light stone patio'."
+        ],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "bytedance-seed/seedream-4.5",
+    "caseId": "TC-17",
+    "historyId": "681aa754-3a7a-4afa-934a-5e19cf64ca71",
+    "images": [
+      "/generated/681aa754-3a7a-4afa-934a-5e19cf64ca71-1.jpg",
+      "/generated/681aa754-3a7a-4afa-934a-5e19cf64ca71-2.jpg",
+      "/generated/681aa754-3a7a-4afa-934a-5e19cf64ca71-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 22326,
+    "costUsd": 0.12,
+    "validation": {
+      "status": "review",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 1,
+      "showCount": 2,
+      "summary": "Варианты A и B отлично соответствуют требованиям. Вариант C имеет измененную перспективу и обрезанную часть дома, что требует проверки."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "review"
+    ],
+    "autoRatings": [
+      {
+        "id": "681aa754-3a7a-4afa-934a-5e19cf64ca71-1",
+        "label": "A",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо интегрирован в сцену, соответствует запрошенным параметрам и маске.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "681aa754-3a7a-4afa-934a-5e19cf64ca71-2",
+        "label": "B",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо интегрирован в сцену, соответствует запрошенным параметрам и маске.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "681aa754-3a7a-4afa-934a-5e19cf64ca71-3",
+        "label": "C",
+        "preservation": 3,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": false,
+        "notes": "Перспектива изменена, часть дома справа обрезана, что снижает оценку сохранения. Бассейн в целом соответствует.",
+        "issues": [
+          "Изменена перспектива",
+          "Изменена часть дома"
+        ],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "bytedance-seed/seedream-4.5",
+    "caseId": "TC-20",
+    "historyId": "4085aec2-a6ec-4aec-ac4c-817902443441",
+    "images": [
+      "/generated/4085aec2-a6ec-4aec-ac4c-817902443441-1.jpg",
+      "/generated/4085aec2-a6ec-4aec-ac4c-817902443441-2.jpg",
+      "/generated/4085aec2-a6ec-4aec-ac4c-817902443441-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 40730,
+    "costUsd": 0.12,
+    "validation": {
+      "status": "review",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 1,
+      "showCount": 2,
+      "summary": "Два варианта полностью соответствуют требованиям, один вариант имеет несоответствие по форме и размеру бассейна."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "review"
+    ],
+    "autoRatings": [
+      {
+        "id": "4085aec2-a6ec-4aec-ac4c-817902443441-1",
+        "label": "A",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн соответствует запрошенным параметрам и хорошо вписан в зону.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "4085aec2-a6ec-4aec-ac4c-817902443441-2",
+        "label": "B",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн соответствует запрошенным параметрам и хорошо вписан в зону.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "4085aec2-a6ec-4aec-ac4c-817902443441-3",
+        "label": "C",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 3,
+        "artifacts": 4,
+        "sendable": false,
+        "notes": "Бассейн круглой формы, а не овальной, и кажется меньше запрошенного размера. Есть небольшие артефакты по краям зоны.",
+        "issues": [
+          "Форма бассейна не соответствует запрошенной (овальная)",
+          "Размер бассейна не соответствует запрошенному (6м x 3м)"
+        ],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "bytedance-seed/seedream-4.5",
+    "caseId": "TC-02",
+    "historyId": "c635162a-9a83-4d3b-8919-00832ae1b710",
+    "images": [
+      "/generated/c635162a-9a83-4d3b-8919-00832ae1b710-1.jpg",
+      "/generated/c635162a-9a83-4d3b-8919-00832ae1b710-2.jpg",
+      "/generated/c635162a-9a83-4d3b-8919-00832ae1b710-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 30548,
+    "costUsd": 0.12,
+    "validation": {
+      "status": "passed",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 0,
+      "showCount": 3,
+      "summary": "Все варианты хорошо вписали бассейн в заданную зону, сохранив оригинальное окружение и перспективу. Незначительные артефакты на траве."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "show"
+    ],
+    "autoRatings": [
+      {
+        "id": "c635162a-9a83-4d3b-8919-00832ae1b710-1",
+        "label": "A",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Небольшие артефакты на траве.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "c635162a-9a83-4d3b-8919-00832ae1b710-2",
+        "label": "B",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Небольшие артефакты на траве.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "c635162a-9a83-4d3b-8919-00832ae1b710-3",
+        "label": "C",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Небольшие артефакты на траве.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "bytedance-seed/seedream-4.5",
+    "caseId": "TC-03",
+    "historyId": "1347610e-bd6e-428a-bb07-0c9031bd8a5a",
+    "images": [
+      "/generated/1347610e-bd6e-428a-bb07-0c9031bd8a5a-1.jpg",
+      "/generated/1347610e-bd6e-428a-bb07-0c9031bd8a5a-2.jpg",
+      "/generated/1347610e-bd6e-428a-bb07-0c9031bd8a5a-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 35778,
+    "costUsd": 0.12,
+    "validation": {
+      "status": "passed",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 0,
+      "showCount": 3,
+      "summary": "Все варианты хорошо вписаны в сцену и соответствуют запросу. Варианты A и C идеально соответствуют всем критериям. Вариант B имеет небольшое отклонение в параметрах деревянного настила, но все равно является хорошим результатом."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "show"
+    ],
+    "autoRatings": [
+      {
+        "id": "1347610e-bd6e-428a-bb07-0c9031bd8a5a-1",
+        "label": "A",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, соответствует запрошенным параметрам и выглядит реалистично. Окружение сохранено.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "1347610e-bd6e-428a-bb07-0c9031bd8a5a-2",
+        "label": "B",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 4,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, выглядит реалистично. Деревянный настил не соответствует запросу 'narrow wooden deck', но в целом приемлемо.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "1347610e-bd6e-428a-bb07-0c9031bd8a5a-3",
+        "label": "C",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, соответствует запрошенным параметрам и выглядит реалистично. Окружение сохранено.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-09",
+    "historyId": "4a0177cd-625a-4004-8cba-3490b7039bfd",
+    "images": [
+      "/generated/4a0177cd-625a-4004-8cba-3490b7039bfd-1.jpg",
+      "/generated/4a0177cd-625a-4004-8cba-3490b7039bfd-2.png",
+      "/generated/4a0177cd-625a-4004-8cba-3490b7039bfd-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 15154,
+    "costUsd": 0.2063215,
+    "validation": {
+      "status": "passed",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 0,
+      "showCount": 3,
+      "summary": "Все варианты хорошо вписаны в сцену, соответствуют запрошенным параметрам и не имеют артефактов."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "show"
+    ],
+    "autoRatings": [
+      {
+        "id": "4a0177cd-625a-4004-8cba-3490b7039bfd-1",
+        "label": "A",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в сцену, соответствует запрошенным параметрам и не имеет артефактов.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "4a0177cd-625a-4004-8cba-3490b7039bfd-2",
+        "label": "B",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в сцену, соответствует запрошенным параметрам и не имеет артефактов.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "4a0177cd-625a-4004-8cba-3490b7039bfd-3",
+        "label": "C",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в сцену, соответствует запрошенным параметрам и не имеет артефактов.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-14",
+    "historyId": "0b0162bd-ef57-429d-978d-e010dbf5eaee",
+    "images": [
+      "/generated/0b0162bd-ef57-429d-978d-e010dbf5eaee-1.jpg",
+      "/generated/0b0162bd-ef57-429d-978d-e010dbf5eaee-2.jpg",
+      "/generated/0b0162bd-ef57-429d-978d-e010dbf5eaee-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 9216,
+    "costUsd": 0.2065665,
+    "validation": {
+      "status": "passed",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 0,
+      "showCount": 3,
+      "summary": "Все варианты хорошо вписали бассейн в заданную зону, сохранив оригинальное окружение и перспективу. Незначительные артефакты присутствуют, но не критичны."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "show"
+    ],
+    "autoRatings": [
+      {
+        "id": "0b0162bd-ef57-429d-978d-e010dbf5eaee-1",
+        "label": "A",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Небольшие артефакты вокруг бассейна.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "0b0162bd-ef57-429d-978d-e010dbf5eaee-2",
+        "label": "B",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Небольшие артефакты вокруг бассейна.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "0b0162bd-ef57-429d-978d-e010dbf5eaee-3",
+        "label": "C",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Небольшие артефакты вокруг бассейна.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-17",
+    "historyId": "eb8fce93-fdeb-442a-bea5-691a9d182b0b",
+    "images": [
+      "/generated/eb8fce93-fdeb-442a-bea5-691a9d182b0b-1.png",
+      "/generated/eb8fce93-fdeb-442a-bea5-691a9d182b0b-2.png",
+      "/generated/eb8fce93-fdeb-442a-bea5-691a9d182b0b-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 13634,
+    "costUsd": 0.2060515,
+    "validation": {
+      "status": "review",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 1,
+      "showCount": 2,
+      "summary": "Все варианты хорошо вписали бассейн в заданную зону, сохранив оригинальный вид двора. Вариант C добавил ступеньки, которые не были запрошены."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "review"
+    ],
+    "autoRatings": [
+      {
+        "id": "eb8fce93-fdeb-442a-bea5-691a9d182b0b-1",
+        "label": "A",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и детали двора. Материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "eb8fce93-fdeb-442a-bea5-691a9d182b0b-2",
+        "label": "B",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Отличный вариант, бассейн идеально вписан, все параметры соблюдены, двор не изменен.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "eb8fce93-fdeb-442a-bea5-691a9d182b0b-3",
+        "label": "C",
+        "preservation": 3,
+        "zone": 3,
+        "realism": 3,
+        "params": 3,
+        "artifacts": 3,
+        "sendable": false,
+        "notes": "Automatic pre-check requires manager review before client use.",
+        "issues": [],
+        "confidence": 0.5,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-20",
+    "historyId": "32089b4e-a75c-43d3-9711-dd5ea0386942",
+    "images": [
+      "/generated/32089b4e-a75c-43d3-9711-dd5ea0386942-1.jpg",
+      "/generated/32089b4e-a75c-43d3-9711-dd5ea0386942-2.png",
+      "/generated/32089b4e-a75c-43d3-9711-dd5ea0386942-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 14772,
+    "costUsd": 0.20632699999999998,
+    "validation": {
+      "status": "review",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 1,
+      "showCount": 2,
+      "summary": "Варианты A и B хорошо соответствуют запросу и могут быть отправлены. Вариант C требует проверки из-за изменений в мебели."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "review"
+    ],
+    "autoRatings": [
+      {
+        "id": "32089b4e-a75c-43d3-9711-dd5ea0386942-1",
+        "label": "A",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Форма и материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "32089b4e-a75c-43d3-9711-dd5ea0386942-2",
+        "label": "B",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Форма и материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "32089b4e-a75c-43d3-9711-dd5ea0386942-3",
+        "label": "C",
+        "preservation": 3,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": false,
+        "notes": "Бассейн хорошо вписан в зону, но некоторые стулья были удалены или изменены, что влияет на сохранение оригинальной сцены.",
+        "issues": [
+          "Изменена мебель"
+        ],
+        "confidence": 0.7,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-02",
+    "historyId": "77cf0313-1854-474b-972c-24fcd9d13c5e",
+    "images": [
+      "/generated/77cf0313-1854-474b-972c-24fcd9d13c5e-1.png",
+      "/generated/77cf0313-1854-474b-972c-24fcd9d13c5e-2.jpg",
+      "/generated/77cf0313-1854-474b-972c-24fcd9d13c5e-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 25895,
+    "costUsd": 0.206152,
+    "validation": {
+      "status": "review",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 3,
+      "showCount": 0,
+      "summary": "Все варианты хорошо сохраняют сцену и находятся в зоне, но бассейн меньше запрошенного размера и отсутствуют теплые акценты."
+    },
+    "validationActions": [
+      "review",
+      "review",
+      "review"
+    ],
+    "autoRatings": [
+      {
+        "id": "77cf0313-1854-474b-972c-24fcd9d13c5e-1",
+        "label": "A",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 5,
+        "sendable": false,
+        "notes": "Бассейн меньше запрошенного размера, но в целом выглядит хорошо. Отсутствуют теплые акценты.",
+        "issues": [
+          "Бассейн не 7м x 3м",
+          "Отсутствуют теплые акценты"
+        ],
+        "confidence": 0.8,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      },
+      {
+        "id": "77cf0313-1854-474b-972c-24fcd9d13c5e-2",
+        "label": "B",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 5,
+        "sendable": false,
+        "notes": "Бассейн меньше запрошенного размера, но в целом выглядит хорошо. Отсутствуют теплые акценты.",
+        "issues": [
+          "Бассейн не 7м x 3м",
+          "Отсутствуют теплые акценты"
+        ],
+        "confidence": 0.8,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      },
+      {
+        "id": "77cf0313-1854-474b-972c-24fcd9d13c5e-3",
+        "label": "C",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 5,
+        "sendable": false,
+        "notes": "Бассейн меньше запрошенного размера, но в целом выглядит хорошо. Отсутствуют теплые акценты.",
+        "issues": [
+          "Бассейн не 7м x 3м",
+          "Отсутствуют теплые акценты"
+        ],
+        "confidence": 0.8,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "google/gemini-3.1-flash-image",
+    "caseId": "TC-03",
+    "historyId": "6156ddd6-dbc3-4d21-b4bc-4a249b5d6a89",
+    "images": [
+      "/generated/6156ddd6-dbc3-4d21-b4bc-4a249b5d6a89-1.png",
+      "/generated/6156ddd6-dbc3-4d21-b4bc-4a249b5d6a89-2.png",
+      "/generated/6156ddd6-dbc3-4d21-b4bc-4a249b5d6a89-3.jpg"
+    ],
+    "providerUrls": [],
+    "latencyMs": 27137,
+    "costUsd": 0.206176,
+    "validation": {
+      "status": "passed",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 0,
+      "showCount": 3,
+      "summary": "Все варианты хорошо вписали бассейн в заданную зону, сохранив окружение и перспективу. Материалы соответствуют запросу."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "show"
+    ],
+    "autoRatings": [
+      {
+        "id": "6156ddd6-dbc3-4d21-b4bc-4a249b5d6a89-1",
+        "label": "A",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "6156ddd6-dbc3-4d21-b4bc-4a249b5d6a89-2",
+        "label": "B",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "6156ddd6-dbc3-4d21-b4bc-4a249b5d6a89-3",
+        "label": "C",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "openai/gpt-image-1-mini",
+    "caseId": "TC-09",
+    "historyId": "84827d9a-d42f-4fe4-a96e-df6f22636ad9",
+    "images": [
+      "/generated/84827d9a-d42f-4fe4-a96e-df6f22636ad9-1.png",
+      "/generated/84827d9a-d42f-4fe4-a96e-df6f22636ad9-2.png",
+      "/generated/84827d9a-d42f-4fe4-a96e-df6f22636ad9-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 49021,
+    "costUsd": 0.15843449999999998,
+    "validation": {
+      "status": "review",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 3,
+      "showCount": 0,
+      "summary": "Все варианты имеют измененные текстуры забора и плитки, а также добавленную растительность вдоль забора, что не было запрошено. Бассейны находятся в маске и выглядят реалистично, но изменения в окружении требуют проверки."
+    },
+    "validationActions": [
+      "review",
+      "review",
+      "review"
+    ],
+    "autoRatings": [
+      {
+        "id": "84827d9a-d42f-4fe4-a96e-df6f22636ad9-1",
+        "label": "A",
+        "preservation": 3,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": false,
+        "notes": "Изменены текстуры забора и плитки, добавлена растительность вдоль забора, что не было запрошено. Бассейн находится в маске и выглядит реалистично.",
+        "issues": [
+          "Изменена текстура забора",
+          "Изменена текстура плитки",
+          "Добавлена растительность вдоль забора"
+        ],
+        "confidence": 0.5,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      },
+      {
+        "id": "84827d9a-d42f-4fe4-a96e-df6f22636ad9-2",
+        "label": "B",
+        "preservation": 3,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": false,
+        "notes": "Изменены текстуры забора и плитки, добавлена растительность вдоль забора, что не было запрошено. Бассейн находится в маске и выглядит реалистично.",
+        "issues": [
+          "Изменена текстура забора",
+          "Изменена текстура плитки",
+          "Добавлена растительность вдоль забора"
+        ],
+        "confidence": 0.5,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      },
+      {
+        "id": "84827d9a-d42f-4fe4-a96e-df6f22636ad9-3",
+        "label": "C",
+        "preservation": 3,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": false,
+        "notes": "Изменены текстуры забора и плитки, добавлена растительность вдоль забора, что не было запрошено. Бассейн находится в маске и выглядит реалистично.",
+        "issues": [
+          "Изменена текстура забора",
+          "Изменена текстура плитки",
+          "Добавлена растительность вдоль забора"
+        ],
+        "confidence": 0.5,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "openai/gpt-image-1-mini",
+    "caseId": "TC-14",
+    "historyId": "a93c9443-3aff-4b88-ba08-8e6239985131",
+    "images": [
+      "/generated/a93c9443-3aff-4b88-ba08-8e6239985131-1.png",
+      "/generated/a93c9443-3aff-4b88-ba08-8e6239985131-2.png",
+      "/generated/a93c9443-3aff-4b88-ba08-8e6239985131-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 48583,
+    "costUsd": 0.1584645,
+    "validation": {
+      "status": "blocked",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 3,
+      "reviewCount": 0,
+      "showCount": 0,
+      "summary": "Все варианты значительно изменяют оригинальное окружение, включая дом, забор, траву и освещение, что делает их непригодными для демонстрации."
+    },
+    "validationActions": [
+      "hide",
+      "hide",
+      "hide"
+    ],
+    "autoRatings": [
+      {
+        "id": "a93c9443-3aff-4b88-ba08-8e6239985131-1",
+        "label": "A",
+        "preservation": 1,
+        "zone": 5,
+        "realism": 3,
+        "params": 4,
+        "artifacts": 3,
+        "sendable": false,
+        "notes": "Вариант полностью меняет окружение, включая дом, забор и освещение, что делает его непригодным для демонстрации.",
+        "issues": [
+          "Изменена стена дома",
+          "Изменена перспектива",
+          "Изменено освещение",
+          "Изменена трава",
+          "Изменены деревья на заднем плане"
+        ],
+        "confidence": 0.5,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "hide"
+      },
+      {
+        "id": "a93c9443-3aff-4b88-ba08-8e6239985131-2",
+        "label": "B",
+        "preservation": 1,
+        "zone": 5,
+        "realism": 3,
+        "params": 4,
+        "artifacts": 3,
+        "sendable": false,
+        "notes": "Вариант полностью меняет окружение, включая дом, забор и освещение, что делает его непригодным для демонстрации.",
+        "issues": [
+          "Изменена стена дома",
+          "Изменена перспектива",
+          "Изменено освещение",
+          "Изменена трава",
+          "Изменены деревья на заднем плане"
+        ],
+        "confidence": 0.5,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "hide"
+      },
+      {
+        "id": "a93c9443-3aff-4b88-ba08-8e6239985131-3",
+        "label": "C",
+        "preservation": 1,
+        "zone": 5,
+        "realism": 3,
+        "params": 4,
+        "artifacts": 3,
+        "sendable": false,
+        "notes": "Вариант полностью меняет окружение, включая дом, забор и освещение, что делает его непригодным для демонстрации.",
+        "issues": [
+          "Изменена стена дома",
+          "Изменена перспектива",
+          "Изменено освещение",
+          "Изменена трава",
+          "Изменены деревья на заднем плане"
+        ],
+        "confidence": 0.5,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "hide"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "openai/gpt-image-1-mini",
+    "caseId": "TC-17",
+    "historyId": "8934cb7a-f4c6-4331-bbf8-e9aee5289a9a",
+    "images": [
+      "/generated/8934cb7a-f4c6-4331-bbf8-e9aee5289a9a-1.png",
+      "/generated/8934cb7a-f4c6-4331-bbf8-e9aee5289a9a-2.png",
+      "/generated/8934cb7a-f4c6-4331-bbf8-e9aee5289a9a-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 48857,
+    "costUsd": 0.156372,
+    "validation": {
+      "status": "blocked",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 3,
+      "reviewCount": 0,
+      "showCount": 0,
+      "summary": "Все варианты полностью перерисовывают сцену, меняя дом, забор, деревья и перспективу, что делает их непригодными для использования."
+    },
+    "validationActions": [
+      "hide",
+      "hide",
+      "hide"
+    ],
+    "autoRatings": [
+      {
+        "id": "8934cb7a-f4c6-4331-bbf8-e9aee5289a9a-1",
+        "label": "A",
+        "preservation": 1,
+        "zone": 5,
+        "realism": 3,
+        "params": 4,
+        "artifacts": 3,
+        "sendable": false,
+        "notes": "Вариант полностью перерисовывает сцену, меняя дом, забор, деревья и перспективу. Хотя бассейн находится в зоне, общая композиция не соответствует оригиналу.",
+        "issues": [
+          "Изменена вся сцена",
+          "Изменена перспектива",
+          "Изменены дом, забор, деревья"
+        ],
+        "confidence": 0.5,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "hide"
+      },
+      {
+        "id": "8934cb7a-f4c6-4331-bbf8-e9aee5289a9a-2",
+        "label": "B",
+        "preservation": 1,
+        "zone": 5,
+        "realism": 3,
+        "params": 4,
+        "artifacts": 3,
+        "sendable": false,
+        "notes": "Вариант полностью перерисовывает сцену, меняя дом, забор, деревья и перспективу. Хотя бассейн находится в зоне, общая композиция не соответствует оригиналу.",
+        "issues": [
+          "Изменена вся сцена",
+          "Изменена перспектива",
+          "Изменены дом, забор, деревья"
+        ],
+        "confidence": 0.5,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "hide"
+      },
+      {
+        "id": "8934cb7a-f4c6-4331-bbf8-e9aee5289a9a-3",
+        "label": "C",
+        "preservation": 1,
+        "zone": 5,
+        "realism": 3,
+        "params": 4,
+        "artifacts": 3,
+        "sendable": false,
+        "notes": "Вариант полностью перерисовывает сцену, меняя дом, забор, деревья и перспективу. Хотя бассейн находится в зоне, общая композиция не соответствует оригиналу.",
+        "issues": [
+          "Изменена вся сцена",
+          "Изменена перспектива",
+          "Изменены дом, забор, деревья"
+        ],
+        "confidence": 0.5,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "hide"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "openai/gpt-image-1-mini",
+    "caseId": "TC-20",
+    "historyId": "9d980c37-0a0f-41fd-a8cb-bdd7052e0f0a",
+    "images": [
+      "/generated/9d980c37-0a0f-41fd-a8cb-bdd7052e0f0a-1.png",
+      "/generated/9d980c37-0a0f-41fd-a8cb-bdd7052e0f0a-2.png",
+      "/generated/9d980c37-0a0f-41fd-a8cb-bdd7052e0f0a-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 48618,
+    "costUsd": 0.158442,
+    "validation": {
+      "status": "review",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 1,
+      "showCount": 2,
+      "summary": "Варианты A и C соответствуют запросу и могут быть показаны. Вариант B имеет неправильную форму бассейна."
+    },
+    "validationActions": [
+      "show",
+      "review",
+      "show"
+    ],
+    "autoRatings": [
+      {
+        "id": "9d980c37-0a0f-41fd-a8cb-bdd7052e0f0a-1",
+        "label": "A",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн соответствует запрошенным параметрам и хорошо вписывается в сцену.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "9d980c37-0a0f-41fd-a8cb-bdd7052e0f0a-2",
+        "label": "B",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 3,
+        "artifacts": 5,
+        "sendable": false,
+        "notes": "Бассейн имеет прямоугольную форму вместо запрошенной овальной.",
+        "issues": [
+          "Форма бассейна не соответствует запрошенной (овальная)"
+        ],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "review"
+      },
+      {
+        "id": "9d980c37-0a0f-41fd-a8cb-bdd7052e0f0a-3",
+        "label": "C",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 5,
+        "params": 5,
+        "artifacts": 5,
+        "sendable": true,
+        "notes": "Бассейн соответствует запрошенным параметрам и хорошо вписывается в сцену.",
+        "issues": [],
+        "confidence": 1,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "openai/gpt-image-1-mini",
+    "caseId": "TC-02",
+    "historyId": "aaadfc30-b0ce-4f06-82c7-dad134ec9766",
+    "images": [
+      "/generated/aaadfc30-b0ce-4f06-82c7-dad134ec9766-1.png",
+      "/generated/aaadfc30-b0ce-4f06-82c7-dad134ec9766-2.png",
+      "/generated/aaadfc30-b0ce-4f06-82c7-dad134ec9766-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 54022,
+    "costUsd": 0.15844950000000002,
+    "validation": {
+      "status": "passed",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 0,
+      "showCount": 3,
+      "summary": "Все варианты хорошо вписывают бассейн в заданную зону, сохраняя оригинальное окружение и перспективу. Материалы и стиль бассейна соответствуют запросу. Вариант B включает дополнительный элемент (шезлонг), что соответствует запросу на зону отдыха."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "show"
+    ],
+    "autoRatings": [
+      {
+        "id": "aaadfc30-b0ce-4f06-82c7-dad134ec9766-1",
+        "label": "A",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Материалы и стиль соответствуют запросу.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "aaadfc30-b0ce-4f06-82c7-dad134ec9766-2",
+        "label": "B",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Добавлен шезлонг, что соответствует запросу на зону отдыха. Материалы и стиль соответствуют запросу.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "aaadfc30-b0ce-4f06-82c7-dad134ec9766-3",
+        "label": "C",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Материалы и стиль соответствуют запросу.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      }
+    ],
+    "warnings": []
+  },
+  {
+    "status": "succeeded",
+    "model": "openai/gpt-image-1-mini",
+    "caseId": "TC-03",
+    "historyId": "1c925117-c5fd-4700-a225-f9069698ce5c",
+    "images": [
+      "/generated/1c925117-c5fd-4700-a225-f9069698ce5c-1.png",
+      "/generated/1c925117-c5fd-4700-a225-f9069698ce5c-2.png",
+      "/generated/1c925117-c5fd-4700-a225-f9069698ce5c-3.png"
+    ],
+    "providerUrls": [],
+    "latencyMs": 107860,
+    "costUsd": 0.1592325,
+    "validation": {
+      "status": "passed",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 0,
+      "showCount": 3,
+      "summary": "Все варианты хорошо вписали бассейн в заданную зону, сохранив окружение и перспективу. Материалы соответствуют запросу."
+    },
+    "validationActions": [
+      "show",
+      "show",
+      "show"
+    ],
+    "autoRatings": [
+      {
+        "id": "1c925117-c5fd-4700-a225-f9069698ce5c-1",
+        "label": "A",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "1c925117-c5fd-4700-a225-f9069698ce5c-2",
+        "label": "B",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      },
+      {
+        "id": "1c925117-c5fd-4700-a225-f9069698ce5c-3",
+        "label": "C",
+        "preservation": 4,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива и окружение. Материалы соответствуют запросу.",
+        "issues": [],
+        "confidence": 0.9,
+        "validator": "openrouter:google/gemini-2.5-flash",
+        "action": "show"
+      }
+    ],
+    "warnings": []
+  }
+]

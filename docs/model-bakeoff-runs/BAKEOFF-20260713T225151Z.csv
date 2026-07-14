@@ -1,0 +1,3 @@
+run_id,status,model,case_id,images,latency_sec,cost_usd,warnings,error,history_id
+"BAKEOFF-20260713T225151Z","failed","openai/gpt-image-2","TC-13","0","60.5","","","fetch failed",""
+"BAKEOFF-20260713T225151Z","failed","openai/gpt-image-2","TC-14","0","60.3","","","fetch failed",""

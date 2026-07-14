@@ -1,0 +1,2 @@
+run_id,status,model,case_id,images,latency_sec,cost_usd,warnings,error,history_id
+"SMOKE-MINI-TC13","succeeded","openai/gpt-image-1-mini","TC-13","3","46.7","0.157202","","","ff9bc735-2866-40d8-8ef5-0e8697adafdc"

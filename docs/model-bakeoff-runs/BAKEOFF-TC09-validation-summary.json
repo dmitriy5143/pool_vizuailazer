@@ -1,0 +1,128 @@
+[
+  {
+    "model": "bytedance-seed/seedream-4.5",
+    "caseId": "TC-09",
+    "historyId": "489772c2-3aa1-43a4-b9e2-2815e6004b19",
+    "latencySec": 54.1,
+    "costUsd": 0.12,
+    "summary": {
+      "status": "review",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 1,
+      "showCount": 2,
+      "summary": "Два варианта (A и C) хорошо соответствуют запросу, один вариант (B) требует доработки из-за несоответствия стиля и добавления лишних элементов."
+    },
+    "variants": [
+      {
+        "label": "A",
+        "action": "show",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "issues": [],
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива. Материалы и стиль соответствуют запросу. Небольшие артефакты на воде."
+      },
+      {
+        "label": "B",
+        "action": "review",
+        "preservation": 3,
+        "zone": 5,
+        "realism": 3,
+        "params": 3,
+        "artifacts": 3,
+        "sendable": false,
+        "issues": [
+          "Изменена плитка на заднем плане",
+          "Добавлены диваны и освещение, не соответствующие запросу",
+          "Несоответствие стиля"
+        ],
+        "notes": "Бассейн находится в зоне, но стиль и материалы не соответствуют запросу. Добавлены лишние элементы (мебель, освещение). Изменена плитка на заднем плане."
+      },
+      {
+        "label": "C",
+        "action": "show",
+        "preservation": 5,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 4,
+        "sendable": true,
+        "issues": [],
+        "notes": "Бассейн хорошо вписан в зону, сохранена перспектива. Материалы и стиль соответствуют запросу. Небольшие артефакты на воде."
+      }
+    ],
+    "images": [
+      "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/489772c2-3aa1-43a4-b9e2-2815e6004b19-1.jpg",
+      "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/489772c2-3aa1-43a4-b9e2-2815e6004b19-2.jpg",
+      "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/489772c2-3aa1-43a4-b9e2-2815e6004b19-3.jpg"
+    ],
+    "mask": "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/489772c2-3aa1-43a4-b9e2-2815e6004b19-zone-mask.png",
+    "upload": "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/uploads/489772c2-3aa1-43a4-b9e2-2815e6004b19.jpg"
+  },
+  {
+    "model": "openai/gpt-image-1-mini",
+    "caseId": "TC-09",
+    "historyId": "229c69c4-b2d3-4f7d-a9ef-bdc17989d2a1",
+    "latencySec": 52.8,
+    "costUsd": 0.15719450000000001,
+    "summary": {
+      "status": "passed",
+      "provider": "openrouter:google/gemini-2.5-flash",
+      "hiddenCount": 0,
+      "reviewCount": 0,
+      "showCount": 3,
+      "summary": "Все варианты хорошо вписывают бассейн в заданную зону. Варианты A и C наиболее соответствуют запросу. Вариант B добавляет лишние объекты и меняет освещение."
+    },
+    "variants": [
+      {
+        "label": "A",
+        "action": "show",
+        "preservation": 3,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 5,
+        "sendable": true,
+        "issues": [],
+        "notes": "Бассейн хорошо вписан в зону, но есть небольшие изменения в окружении."
+      },
+      {
+        "label": "B",
+        "action": "show",
+        "preservation": 3,
+        "zone": 5,
+        "realism": 4,
+        "params": 3,
+        "artifacts": 5,
+        "sendable": true,
+        "issues": [
+          "Добавлены лишние объекты (зонт, шезлонг)"
+        ],
+        "notes": "Бассейн хорошо вписан, но добавлены лишние элементы, не соответствующие запросу. Освещение изменено."
+      },
+      {
+        "label": "C",
+        "action": "show",
+        "preservation": 3,
+        "zone": 5,
+        "realism": 4,
+        "params": 4,
+        "artifacts": 5,
+        "sendable": true,
+        "issues": [],
+        "notes": "Бассейн хорошо вписан в зону, но есть небольшие изменения в окружении."
+      }
+    ],
+    "images": [
+      "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/229c69c4-b2d3-4f7d-a9ef-bdc17989d2a1-1.png",
+      "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/229c69c4-b2d3-4f7d-a9ef-bdc17989d2a1-2.png",
+      "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/229c69c4-b2d3-4f7d-a9ef-bdc17989d2a1-3.png"
+    ],
+    "mask": "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/generated/229c69c4-b2d3-4f7d-a9ef-bdc17989d2a1-zone-mask.png",
+    "upload": "/Users/dmitrijabovskij/Desktop/pool-ai-visualizer-demo/data/uploads/229c69c4-b2d3-4f7d-a9ef-bdc17989d2a1.jpg"
+  }
+]
