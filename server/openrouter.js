@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { DEFAULTS, envInt, envList, envString } from "./config.js";
 import { createZoneMaskPng } from "./mask.js";
+import { createZoneOverlayJpeg } from "./overlay.js";
 import { buildPrompt } from "./prompt.js";
 
 const OPENROUTER_IMAGES_URL = "https://openrouter.ai/api/v1/images";
@@ -461,6 +462,7 @@ async function generateParallelVariants({
   variants,
   capabilities,
   sourceAspectRatio,
+  referenceMode,
   feedback = "",
   abortSignal
 }) {
@@ -468,7 +470,7 @@ async function generateParallelVariants({
   const concurrency = envInt("OPENROUTER_SINGLE_IMAGE_CONCURRENCY", Math.min(DEFAULTS.openrouterSingleImageConcurrency, variants), 1, variants);
   const settled = await runWithConcurrency(indexes, concurrency, async (index) => {
     throwIfAborted(abortSignal);
-    const variantPrompt = buildPrompt({ params, zone, variantIndex: index, feedback });
+    const variantPrompt = buildPrompt({ params, zone, variantIndex: index, feedback, referenceMode });
     try {
       const payload = await callOpenRouterWithRetry({
         apiKey,
@@ -512,7 +514,10 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
   const maskDataUrl = `data:image/png;base64,${maskBuffer.toString("base64")}`;
   const maskFilename = `${requestId}-zone-mask.png`;
   await fs.writeFile(path.join(outputDir, maskFilename), maskBuffer);
-  const prompt = buildPrompt({ params, zone, feedback });
+  const overlayBuffer = await createZoneOverlayJpeg(upload.path, zone, maskWidth, maskHeight, params.shape);
+  const overlayFilename = `${requestId}-zone-overlay.jpg`;
+  const overlayDataUrl = `data:image/jpeg;base64,${overlayBuffer.toString("base64")}`;
+  await fs.writeFile(path.join(outputDir, overlayFilename), overlayBuffer);
   const warnings = [];
   const referenceLimit = inputReferenceLimit(capabilities);
   if (referenceLimit <= 0) {
@@ -522,12 +527,16 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
   }
   if (referenceLimit < 2) {
     const error = new Error(
-      `OpenRouter model "${model}" accepts only ${referenceLimit} input reference image(s). This demo requires at least 2 references: the original photo and the placement mask.`
+      `OpenRouter model "${model}" accepts only ${referenceLimit} input reference image(s). This demo requires at least 2 references: the original photo and the placement overlay.`
     );
     error.status = 400;
     throw error;
   }
-  const referenceDataUrls = [referenceDataUrl, maskDataUrl].slice(0, referenceLimit);
+  const referenceDataUrls = referenceLimit >= 3
+    ? [referenceDataUrl, overlayDataUrl, maskDataUrl]
+    : [referenceDataUrl, overlayDataUrl];
+  const referenceMode = referenceLimit >= 3 ? "overlay-mask" : "overlay";
+  const prompt = buildPrompt({ params, zone, feedback, referenceMode });
   const sourceAspectRatio = zone.imageWidth / zone.imageHeight;
 
   let payload;
@@ -558,6 +567,7 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
         capabilities,
         sourceAspectRatio,
         feedback,
+        referenceMode,
         abortSignal
       });
       warnings.push("Batch n>1 request was rejected; generated variants with parallel n=1 calls.");
@@ -577,6 +587,7 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
       capabilities,
       sourceAspectRatio,
       feedback,
+      referenceMode,
       abortSignal
     });
   }
@@ -626,6 +637,7 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
     model,
     prompt: payload.prompt || prompt,
     maskUrl: `/generated/${maskFilename}`,
+    overlayUrl: `/generated/${overlayFilename}`,
     images,
     usage: payload.usage || null,
     warnings

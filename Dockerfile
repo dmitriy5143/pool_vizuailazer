@@ -21,6 +21,7 @@ RUN node --check server/index.js \
   && node --check server/openrouter.js \
   && node --check server/mock-generator.js \
   && node --check server/placement.js \
+  && node --check server/overlay.js \
   && node --check server/prompt.js \
   && node --check server/validator.js \
   && node --check server/mask.js \

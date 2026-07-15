@@ -24,7 +24,7 @@ function feedbackText(feedback) {
   ].join("\n");
 }
 
-export function buildPrompt({ params, zone, variantIndex = null, feedback = "" }) {
+export function buildPrompt({ params, zone, variantIndex = null, feedback = "", referenceMode = "overlay-mask" }) {
   const styleKey = params.style || "modern";
   const styleDescription = STYLE_DESCRIPTIONS[styleKey] || STYLE_DESCRIPTIONS.modern;
   const zoneText = zone
@@ -34,6 +34,20 @@ export function buildPrompt({ params, zone, variantIndex = null, feedback = "" }
     variantIndex === null
       ? "Create several distinct but realistic concept variants."
       : VARIANT_DIRECTIONS[variantIndex % VARIANT_DIRECTIONS.length];
+  const referenceText = zone
+    ? {
+        "overlay-mask": [
+          "Reference image #1 is the original photo.",
+          "Reference image #2 is the same photo with a cyan/white placement overlay drawn directly on the intended pool footprint. This overlay is the strongest placement guide.",
+          "Reference image #3 is a black-and-white binary placement mask: white marks the intended pool footprint / editable area for the requested shape, black marks the area to preserve."
+        ].join(" "),
+        overlay: [
+          "Reference image #1 is the original photo.",
+          "Reference image #2 is the same photo with a cyan/white placement overlay drawn directly on the intended pool footprint. This overlay is the strongest placement guide."
+        ].join(" "),
+        mask: "Reference image #1 is the original photo. Reference image #2 is a black-and-white placement mask, not a design reference: white marks the exact intended pool footprint / editable placement area for the requested shape, black marks the area to preserve."
+      }[referenceMode] || ""
+    : "";
 
   return [
     "Task: photorealistic image editing of the provided real backyard / land plot photo.",
@@ -42,10 +56,8 @@ export function buildPrompt({ params, zone, variantIndex = null, feedback = "" }
     "Do not crop, rotate, zoom, reframe, colorize, upscale into a different composition, or change the camera position. Keep the original framing and aspect ratio.",
     "Add an outdoor swimming pool only inside the selected zone.",
     zoneText,
-    zone
-      ? "Reference image #1 is the original photo. Reference image #2 is a black-and-white placement mask, not a design reference: white marks the exact intended pool footprint / editable placement area for the requested shape, black marks the area to preserve."
-      : "",
-    "Use the original photo as the primary reference. Use the mask and coordinates as the user's intended visible pool footprint and placement area; do not treat them as a loose suggestion. Do not draw the mask, border, guide colors, labels, or UI overlays into the output.",
+    referenceText,
+    "Use the original photo as the primary reference. Use the overlay, mask, and coordinates as the user's intended visible pool footprint and placement area; do not treat them as a loose suggestion. Do not draw the cyan tint, white border, mask, guide colors, labels, or UI overlays into the output.",
     `Pool dimensions requested: ${params.lengthM || "not specified"}m x ${params.widthM || "not specified"}m.`,
     `Pool shape: ${params.shape || "rectangular"}.`,
     `Design style: ${styleDescription}.`,
@@ -54,7 +66,7 @@ export function buildPrompt({ params, zone, variantIndex = null, feedback = "" }
     feedbackText(feedback),
     variantText,
     "Estimate the ground plane and perspective from the photo. Align the pool edges, coping, deck, shadows, reflections, and scale with that perspective.",
-    "The selected zone is a hard boundary for the edit. The pool, coping, deck, water, shadows, and replacement ground must remain inside the mask/zone unless the user explicitly selected the adjacent ground surface.",
+    "The selected zone is a hard boundary for the edit. The pool, coping, deck, water, shadows, and replacement ground must remain inside the overlay/mask/zone unless the user explicitly selected the adjacent ground surface.",
     "The visible pool footprint should sit on the ground plane inside the selected zone, with realistic perspective margins. Do not use a vertical fence, wall, house facade, roof, tree trunk, or distant background as pool surface.",
     "Keep a realistic visual buffer from fences, house walls, retaining walls, and large trees. Never place the pool on, through, behind, hanging from, or attached to a fence or house.",
     "Inside the selected zone, replace ground, minor movable objects, or vegetation only when needed to place the pool cleanly.",

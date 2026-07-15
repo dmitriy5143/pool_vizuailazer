@@ -21,7 +21,7 @@ function escapeXml(value) {
 
 export async function generateMockImages({ requestId, upload, params, zone, variants, outputDir, feedback = "", abortSignal }) {
   if (abortSignal?.aborted) throw new Error("Generation was aborted.");
-  const prompt = buildPrompt({ params, zone, feedback });
+  const prompt = buildPrompt({ params, zone, feedback, referenceMode: "mask" });
   const imageHref = `/uploads/${path.basename(upload.path)}`;
   const maskWidth = Math.max(1, Math.round(Number(zone.imageWidth) || 1280));
   const maskHeight = Math.max(1, Math.round(Number(zone.imageHeight) || 820));
