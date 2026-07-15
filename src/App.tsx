@@ -210,7 +210,6 @@ const defaultParams = {
   depthM: "",
   shape: "rectangular",
   style: "modern",
-  poolFinish: "Blue Iridium Gelcoat",
   materials: "светлая плитка, деревянный настил, немного зелени",
   notes: ""
 };
@@ -268,18 +267,6 @@ const poolProducts: PoolProduct[] = [
   { id: "quick-6025", line: "Quick", model: "QUICK 6025", lengthM: "6.0", widthM: "2.5", depthM: "1.6", shape: "rectangular", description: "узкий lap-pool для плавания" },
   { id: "quick-7025", line: "Quick", model: "QUICK 7025", lengthM: "7.0", widthM: "2.5", depthM: "1.6", shape: "rectangular", description: "узкий lap-pool для плавания" },
   { id: "spa-4025", line: "Spa", model: "SPA 4025", lengthM: "4.0", widthM: "2.5", depthM: "1.0", shape: "rectangular", description: "компактная SPA-чаша" }
-];
-
-const poolFinishes = [
-  "Emerald Gelcoat",
-  "Black Galaxy Gelcoat",
-  "Coral Gelcoat",
-  "Blue Iridium Gelcoat",
-  "Granite Gelcoat",
-  "Tiffany Blue Gelcoat",
-  "Sea Foam Gelcoat",
-  "Russian S-Line Gelcoat",
-  "Sandy Beach Gelcoat"
 ];
 
 const emptyPoolProductParams = {
@@ -2351,12 +2338,6 @@ export default function App() {
                 <span>Форма</span>
                 <select value={params.shape} onChange={(event) => updateParam("shape", event.target.value)}>
                   {shapeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                </select>
-              </label>
-              <label>
-                <span>Покрытие</span>
-                <select value={params.poolFinish} onChange={(event) => updateParam("poolFinish", event.target.value)}>
-                  {poolFinishes.map((finish) => <option key={finish} value={finish}>{finish}</option>)}
                 </select>
               </label>
               <label className="wide">
