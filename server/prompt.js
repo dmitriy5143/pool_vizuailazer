@@ -7,11 +7,11 @@ const STYLE_DESCRIPTIONS = {
 };
 
 const VARIANT_DIRECTIONS = [
-  "Variant A: clean minimal pool with the least possible change outside the selected zone.",
-  "Variant B: premium material finish while preserving the same yard, fence, house, camera angle, and lighting.",
-  "Variant C: practical family pool with safe access, without adding unrequested furniture or new objects.",
-  "Variant D: natural stone and greenery integration only inside or immediately bordering the selected zone.",
-  "Variant E: subtle lighting/reflection variant only if it does not alter the original time of day or scene."
+  "View A: main sales view of the same pool concept, with the least possible change outside the selected zone.",
+  "View B: the same pool concept from a slightly more near-edge presentation inside the original perspective; keep the same model, materials, coping, deck layout, yard, camera angle, and lighting.",
+  "View C: the same pool concept with a slightly more contextual presentation of the surrounding placement area; keep the same model, materials, coping, deck layout, yard, camera angle, and lighting.",
+  "View D: the same pool concept with a subtle emphasis on water/coping realism inside the selected zone; keep the design identical.",
+  "View E: the same pool concept with a subtle emphasis on how the pool sits in the ground plane; keep the design identical."
 ];
 
 function feedbackText(feedback) {
@@ -49,7 +49,7 @@ export function buildPrompt({ params, zone, variantIndex = null, feedback = "", 
     : "The intended pool zone is marked by the user in the attached image.";
   const variantText =
     variantIndex === null
-      ? "Create several distinct but realistic concept variants."
+      ? "Create several views of the same realistic pool concept, not different design concepts."
       : VARIANT_DIRECTIONS[variantIndex % VARIANT_DIRECTIONS.length];
   const referenceText = zone
     ? {
@@ -82,6 +82,8 @@ export function buildPrompt({ params, zone, variantIndex = null, feedback = "", 
     `Materials and surroundings: ${params.materials || "matching realistic outdoor materials"}.`,
     params.notes ? `Client notes: ${params.notes}.` : "",
     feedbackText(feedback),
+    "All generated variants must represent the same proposal: same selected catalog model, same shape, same dimensions, same coating, same coping/deck material logic, same placement, and same landscape decisions. Do not make one variant minimal, another premium, another family, or another natural. The only acceptable differences are safe presentation/view emphasis, water/shadow details, and small realism refinements.",
+    "For this photo-editing demo, 'different view' does not mean moving to a new camera position or inventing a new backyard. Preserve the original camera and framing if changing the viewpoint would make the selected zone unreliable.",
     variantText,
     "Estimate the ground plane and perspective from the photo. Align the pool edges, coping, deck, shadows, reflections, and scale with that perspective.",
     "The selected zone is a hard boundary for the edit. The pool, coping, deck, water, shadows, and replacement ground must remain inside the overlay/mask/zone unless the user explicitly selected the adjacent ground surface.",
@@ -99,5 +101,5 @@ export function buildPrompt({ params, zone, variantIndex = null, feedback = "", 
 }
 
 export function getVariantTitle(index) {
-  return ["Минимал", "Премиум", "Семейный", "Натуральный", "Вечерний"][index] || `Вариант ${index + 1}`;
+  return ["Основной вид", "Ближний вид", "Контекст", "Деталь воды", "Посадка в участок"][index] || `Вид ${index + 1}`;
 }
