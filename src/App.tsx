@@ -75,6 +75,8 @@ type GenerationResult = {
   prompt: string;
   upload: string;
   maskUrl?: string | null;
+  overlayUrl?: string | null;
+  productReferenceUrl?: string | null;
   images: GeneratedImage[];
   latencyMs: number;
   usage?: Record<string, unknown> | null;

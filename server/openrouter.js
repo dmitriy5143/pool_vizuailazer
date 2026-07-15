@@ -4,6 +4,7 @@ import path from "node:path";
 import { DEFAULTS, envInt, envList, envString } from "./config.js";
 import { createZoneMaskPng } from "./mask.js";
 import { createZoneOverlayJpeg } from "./overlay.js";
+import { productReferenceAsset } from "./pool-catalog.js";
 import { buildPrompt } from "./prompt.js";
 
 const OPENROUTER_IMAGES_URL = "https://openrouter.ai/api/v1/images";
@@ -453,6 +454,11 @@ function errorSummary(error) {
   return error?.message || "Unknown generation error.";
 }
 
+function productReferenceLabel(asset) {
+  if (!asset) return "product";
+  return String(asset.line || "product").toLowerCase().replace(/[^a-z0-9_-]+/gi, "-");
+}
+
 async function generateParallelVariants({
   apiKey,
   model,
@@ -467,7 +473,10 @@ async function generateParallelVariants({
   abortSignal
 }) {
   const indexes = Array.from({ length: variants }, (_value, index) => index);
-  const concurrency = envInt("OPENROUTER_SINGLE_IMAGE_CONCURRENCY", Math.min(DEFAULTS.openrouterSingleImageConcurrency, variants), 1, variants);
+  const defaultConcurrency = referenceDataUrls.length >= 4
+    ? 1
+    : Math.min(DEFAULTS.openrouterSingleImageConcurrency, variants);
+  const concurrency = envInt("OPENROUTER_SINGLE_IMAGE_CONCURRENCY", defaultConcurrency, 1, variants);
   const settled = await runWithConcurrency(indexes, concurrency, async (index) => {
     throwIfAborted(abortSignal);
     const variantPrompt = buildPrompt({ params, zone, variantIndex: index, feedback, referenceMode });
@@ -518,6 +527,17 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
   const overlayFilename = `${requestId}-zone-overlay.jpg`;
   const overlayDataUrl = `data:image/jpeg;base64,${overlayBuffer.toString("base64")}`;
   await fs.writeFile(path.join(outputDir, overlayFilename), overlayBuffer);
+  const productReference = await productReferenceAsset(params);
+  let productReferenceUrl = null;
+  let productReferenceDataUrl = null;
+  if (productReference) {
+    const ext = path.extname(productReference.filename).replace(".", "") || "webp";
+    const productReferenceFilename = `${requestId}-product-${productReferenceLabel(productReference)}.${ext}`;
+    const productReferencePath = path.join(outputDir, productReferenceFilename);
+    await fs.copyFile(productReference.path, productReferencePath);
+    productReferenceUrl = `/generated/${productReferenceFilename}`;
+    productReferenceDataUrl = await fileToDataUrl(productReferencePath, productReference.mimeType || `image/${ext}`);
+  }
   const warnings = [];
   const referenceLimit = inputReferenceLimit(capabilities);
   if (referenceLimit <= 0) {
@@ -532,10 +552,21 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
     error.status = 400;
     throw error;
   }
-  const referenceDataUrls = referenceLimit >= 3
-    ? [referenceDataUrl, overlayDataUrl, maskDataUrl]
-    : [referenceDataUrl, overlayDataUrl];
-  const referenceMode = referenceLimit >= 3 ? "overlay-mask" : "overlay";
+  let referenceDataUrls = [referenceDataUrl, overlayDataUrl];
+  let referenceMode = "overlay";
+  if (productReferenceDataUrl && referenceLimit >= 4) {
+    referenceDataUrls = [referenceDataUrl, overlayDataUrl, maskDataUrl, productReferenceDataUrl];
+    referenceMode = "overlay-mask-product";
+  } else if (productReferenceDataUrl && referenceLimit >= 3) {
+    referenceDataUrls = [referenceDataUrl, overlayDataUrl, productReferenceDataUrl];
+    referenceMode = "overlay-product";
+    warnings.push("Selected model accepts only 3 reference images; sent product reference and omitted binary mask because placement overlay is still included.");
+  } else if (referenceLimit >= 3) {
+    referenceDataUrls = [referenceDataUrl, overlayDataUrl, maskDataUrl];
+    referenceMode = "overlay-mask";
+  } else if (productReferenceDataUrl) {
+    warnings.push("Selected model accepts only 2 reference images; product reference image was not sent.");
+  }
   const prompt = buildPrompt({ params, zone, feedback, referenceMode });
   const sourceAspectRatio = zone.imageWidth / zone.imageHeight;
 
@@ -638,6 +669,7 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
     prompt: payload.prompt || prompt,
     maskUrl: `/generated/${maskFilename}`,
     overlayUrl: `/generated/${overlayFilename}`,
+    productReferenceUrl,
     images,
     usage: payload.usage || null,
     warnings

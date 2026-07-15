@@ -4,6 +4,7 @@ import path from "node:path";
 import sharp from "sharp";
 
 import { DEFAULTS, envInt, envString } from "./config.js";
+import { productPromptDetails } from "./pool-catalog.js";
 
 const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
 const scoreKeys = ["preservation", "zone", "realism", "params", "artifacts"];
@@ -301,6 +302,7 @@ function parseJsonObject(text) {
 }
 
 function validationPrompt({ params, zone, images }) {
+  const productDetails = productPromptDetails(params);
   return [
     "You are a practical QA validator for a pool image-editing demo.",
     "Compare the original photo, the black/white placement mask, and each generated variant.",
@@ -310,7 +312,7 @@ function validationPrompt({ params, zone, images }) {
     "preservation: 1 means original yard/house/fence/camera strongly changed, 5 means house/fence/perspective are preserved.",
     "zone: 1 means the pool is outside or overlaps wrong objects, 5 means fully inside the selected zone.",
     "realism: 1 means obvious AI artifact, 5 means plausible photo/visualization.",
-    "params: 1 means shape/style/materials do not match, 5 means requested shape/style/materials match.",
+    "params: 1 means selected catalog model/shape/style/materials do not match, 5 means requested River Pools line/model proportions, shape, finish, and materials match.",
     "artifacts: 1 means major artifacts/text/warping/labels, 5 means no gross artifacts.",
     "sendable must be true only when every score is at least 4, the pool is inside the mask/zone, and the original yard is preserved.",
     "action must be one of: show, review, hide.",
@@ -321,6 +323,7 @@ function validationPrompt({ params, zone, images }) {
     "Return notes and issues in Russian.",
     "Return JSON only, no markdown.",
     `Requested pool: ${params.lengthM}m x ${params.widthM}m, shape=${params.shape}, style=${params.style}, materials=${params.materials}.`,
+    productDetails ? `Selected River Pools product: ${productDetails}.` : "",
     `Selected zone: x=${zone.x}, y=${zone.y}, width=${zone.width}, height=${zone.height}.`,
     `Variants: ${images.map((image) => `${image.id} label ${image.label}`).join("; ")}.`,
     "JSON schema: {\"variants\":[{\"id\":\"image id\",\"preservation\":1,\"zone\":1,\"realism\":1,\"params\":1,\"artifacts\":1,\"sendable\":false,\"action\":\"hide\",\"confidence\":0.0,\"issues\":[\"short issue\"],\"notes\":\"short reason\"}],\"summary\":\"short run summary\"}"
@@ -524,7 +527,7 @@ export async function validateGeneratedImages({
     return {
       autoRatings,
       summary: summarize(autoRatings, "validation-failed"),
-      warnings: []
+      warnings: [`Автопроверка перешла в ручной режим: ${error.message || "неизвестная ошибка валидатора"}.`]
     };
   }
 }

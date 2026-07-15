@@ -23,6 +23,7 @@ export const DEFAULTS = {
   openrouterPlacementModel: "google/gemini-2.5-flash",
   openrouterPlacementTimeoutMs: 60_000,
   taskWorkerConcurrency: 2,
+  taskRunTimeoutMs: 360_000,
   taskRetryAttempts: 2,
   taskRetryBaseMs: 1800,
   taskRetryMaxMs: 45_000,

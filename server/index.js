@@ -30,6 +30,7 @@ const maxImagePixels = envInt("MAX_UPLOAD_IMAGE_PIXELS", DEFAULTS.maxUploadImage
 const requestHistoryLimit = envInt("REQUEST_HISTORY_LIMIT", DEFAULTS.requestHistoryLimit, 1, 500);
 const maxVariantCount = envInt("MAX_VARIANT_COUNT", DEFAULTS.maxVariantCount, 1, 100);
 const taskWorkerConcurrency = envInt("TASK_WORKER_CONCURRENCY", DEFAULTS.taskWorkerConcurrency, 1, 5);
+const taskRunTimeoutMs = envInt("TASK_RUN_TIMEOUT_MS", DEFAULTS.taskRunTimeoutMs, 30_000, 900_000);
 const taskRetryAttempts = envInt("TASK_RETRY_ATTEMPTS", DEFAULTS.taskRetryAttempts, 1, 4);
 const taskRetryBaseMs = envInt("TASK_RETRY_BASE_MS", DEFAULTS.taskRetryBaseMs, 250, 60_000);
 const taskRetryMaxMs = envInt("TASK_RETRY_MAX_MS", DEFAULTS.taskRetryMaxMs, 1000, 180_000);
@@ -326,6 +327,45 @@ function isRetryableGenerationError(error) {
   return message.includes("network") || message.includes("timeout") || message.includes("fetch failed");
 }
 
+function taskTimeoutError() {
+  const error = new Error(`Генерация не уложилась в лимит ${Math.round(taskRunTimeoutMs / 1000)} сек.`);
+  error.status = 504;
+  return error;
+}
+
+function taskCanceledError() {
+  const error = new Error("Generation was canceled.");
+  error.status = 499;
+  return error;
+}
+
+async function withTaskDeadline(parentSignal, work) {
+  const controller = new AbortController();
+  let settled = false;
+  const timeout = setTimeout(() => {
+    if (settled) return;
+    controller.abort(taskTimeoutError());
+  }, taskRunTimeoutMs);
+  const onParentAbort = () => controller.abort();
+  parentSignal?.addEventListener("abort", onParentAbort, { once: true });
+
+  const abortPromise = new Promise((_resolve, reject) => {
+    controller.signal.addEventListener(
+      "abort",
+      () => reject(controller.signal.reason || (parentSignal?.aborted ? taskCanceledError() : taskTimeoutError())),
+      { once: true }
+    );
+  });
+
+  try {
+    return await Promise.race([work(controller.signal), abortPromise]);
+  } finally {
+    settled = true;
+    clearTimeout(timeout);
+    parentSignal?.removeEventListener("abort", onParentAbort);
+  }
+}
+
 function taskUploadPath(task) {
   return path.join(uploadDir, task.upload?.filename || "");
 }
@@ -445,29 +485,32 @@ async function runGenerationTask(task, abortSignal) {
   const mode = generationMode();
   const generator = mode === "openrouter" ? generateWithOpenRouter : generateMockImages;
   try {
-    const result = await generator({
-      requestId: task.id,
-      upload: {
-        path: taskUploadPath(task),
-        mimetype: task.upload?.mimetype || "image/jpeg"
-      },
-      params: task.params,
-      zone: task.zone,
-      variants: task.variants,
-      outputDir: generatedDir,
-      feedback: task.feedback || "",
-      abortSignal
+    const { result, validation } = await withTaskDeadline(abortSignal, async (taskSignal) => {
+      const generationResult = await generator({
+        requestId: task.id,
+        upload: {
+          path: taskUploadPath(task),
+          mimetype: task.upload?.mimetype || "image/jpeg"
+        },
+        params: task.params,
+        zone: task.zone,
+        variants: task.variants,
+        outputDir: generatedDir,
+        feedback: task.feedback || "",
+        abortSignal: taskSignal
+      });
+      const validationResult = await validateGeneratedImages({
+        task,
+        result: generationResult,
+        dataDir,
+        originalPath: taskUploadPath(task),
+        originalMimeType: task.upload?.mimetype || "image/jpeg",
+        mode,
+        abortSignal: taskSignal
+      });
+      return { result: generationResult, validation: validationResult };
     });
     const latencyMs = Date.now() - startedAt;
-    const validation = await validateGeneratedImages({
-      task,
-      result,
-      dataDir,
-      originalPath: taskUploadPath(task),
-      originalMimeType: task.upload?.mimetype || "image/jpeg",
-      mode,
-      abortSignal
-    });
     const images = result.images.map((image) => ({
       ...image,
       validation: validation.autoRatings[image.id] || null
@@ -487,6 +530,7 @@ async function runGenerationTask(task, abortSignal) {
       upload: task.upload.url,
       maskUrl: result.maskUrl || null,
       overlayUrl: result.overlayUrl || null,
+      productReferenceUrl: result.productReferenceUrl || null,
       guideUrl: result.guideUrl || null,
       images,
       usage: result.usage,
@@ -1039,6 +1083,7 @@ app.post("/api/generate", async (req, res) => {
       upload: `/uploads/${path.basename(req.file.path)}`,
       maskUrl: result.maskUrl || null,
       overlayUrl: result.overlayUrl || null,
+      productReferenceUrl: result.productReferenceUrl || null,
       guideUrl: result.guideUrl || null,
       images: result.images,
       usage: result.usage,
