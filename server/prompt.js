@@ -24,6 +24,23 @@ function feedbackText(feedback) {
   ].join("\n");
 }
 
+function productText(params) {
+  const productName = String(params.poolModelName || "").trim();
+  if (!productName) return "";
+  const details = [
+    `Selected real River Pools catalog model: ${productName}`,
+    params.poolModelLine ? `line=${params.poolModelLine}` : "",
+    params.depthM ? `depth=${params.depthM}m` : "",
+    params.priceRub ? `shell price=${params.priceRub} RUB` : "",
+    params.poolFinish ? `bowl coating=${params.poolFinish}` : ""
+  ].filter(Boolean).join("; ");
+  return [
+    `${details}.`,
+    "Use this as the target composite pool shell, not a generic invented pool.",
+    "Follow the selected model proportions, simple composite basin geometry, coping, and requested coating; do not invent a different model, fantasy shape, extra spa zone, or unrequested furniture."
+  ].join(" ");
+}
+
 export function buildPrompt({ params, zone, variantIndex = null, feedback = "", referenceMode = "overlay-mask" }) {
   const styleKey = params.style || "modern";
   const styleDescription = STYLE_DESCRIPTIONS[styleKey] || STYLE_DESCRIPTIONS.modern;
@@ -59,6 +76,7 @@ export function buildPrompt({ params, zone, variantIndex = null, feedback = "", 
     referenceText,
     "Use the original photo as the primary reference. Use the overlay, mask, and coordinates as the user's intended visible pool footprint and placement area; do not treat them as a loose suggestion. Do not draw the cyan tint, white border, mask, guide colors, labels, or UI overlays into the output.",
     `Pool dimensions requested: ${params.lengthM || "not specified"}m x ${params.widthM || "not specified"}m.`,
+    productText(params),
     `Pool shape: ${params.shape || "rectangular"}.`,
     `Design style: ${styleDescription}.`,
     `Materials and surroundings: ${params.materials || "matching realistic outdoor materials"}.`,

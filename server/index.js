@@ -133,6 +133,12 @@ function normalizeGenerationParams(params) {
     ...params,
     lengthM: String(numberFromUser(params.lengthM)),
     widthM: String(numberFromUser(params.widthM)),
+    depthM: safeText(params.depthM, "", 80),
+    poolModelId: safeText(params.poolModelId, "", 120),
+    poolModelName: safeText(params.poolModelName, "", 160),
+    poolModelLine: safeText(params.poolModelLine, "", 120),
+    poolFinish: safeText(params.poolFinish, "", 160),
+    priceRub: safeText(params.priceRub, "", 80),
     materials: safeText(params.materials, "", 1000),
     notes: safeText(params.notes, "", 2000)
   };

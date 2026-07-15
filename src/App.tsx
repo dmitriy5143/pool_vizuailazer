@@ -200,10 +200,16 @@ type PlacementSuggestion = {
 };
 
 const defaultParams = {
+  poolModelId: "",
+  poolModelName: "",
+  poolModelLine: "",
   lengthM: "7",
   widthM: "3",
+  depthM: "",
+  priceRub: "",
   shape: "rectangular",
   style: "modern",
+  poolFinish: "Blue Iridium Gelcoat",
   materials: "светлая плитка, деревянный настил, немного зелени",
   notes: ""
 };
@@ -231,6 +237,58 @@ const shapeOptions = [
   { value: "oval", label: "Овальный" },
   { value: "freeform", label: "Свободный" }
 ];
+
+type PoolProduct = {
+  id: string;
+  line: string;
+  model: string;
+  lengthM: string;
+  widthM: string;
+  depthM: string;
+  priceRub: number;
+  shape: "rectangular";
+  description: string;
+};
+
+const poolProducts: PoolProduct[] = [
+  { id: "luxor-6536", line: "Luxor", model: "LUXOR 6536", lengthM: "6.5", widthM: "3.6", depthM: "1.1-1.7", priceRub: 1_400_000, shape: "rectangular", description: "прямоугольная композитная чаша" },
+  { id: "luxor-7537", line: "Luxor", model: "LUXOR 7537", lengthM: "7.5", widthM: "3.7", depthM: "1.1-1.7", priceRub: 1_610_000, shape: "rectangular", description: "прямоугольная композитная чаша" },
+  { id: "luxor-8537", line: "Luxor", model: "LUXOR 8537", lengthM: "8.5", widthM: "3.7", depthM: "1.1-1.7", priceRub: 1_820_000, shape: "rectangular", description: "прямоугольная композитная чаша" },
+  { id: "luxor-9537", line: "Luxor", model: "LUXOR 9537", lengthM: "9.5", widthM: "3.7", depthM: "1.1-1.7", priceRub: 2_035_000, shape: "rectangular", description: "прямоугольная композитная чаша" },
+  { id: "luxor-10537", line: "Luxor", model: "LUXOR 10537", lengthM: "10.5", widthM: "3.7", depthM: "1.1-1.7", priceRub: 2_240_000, shape: "rectangular", description: "прямоугольная композитная чаша" },
+  { id: "minipool-4025", line: "Minipool", model: "Minipool 4025", lengthM: "4.0", widthM: "2.5", depthM: "1.3-1.5", priceRub: 740_000, shape: "rectangular", description: "компактная чаша для небольшого участка" },
+  { id: "minipool-4530", line: "Minipool", model: "Minipool 4530", lengthM: "4.5", widthM: "3.0", depthM: "1.5", priceRub: 825_000, shape: "rectangular", description: "компактная чаша для небольшого участка" },
+  { id: "minipool-5530", line: "Minipool", model: "Minipool 5530", lengthM: "5.5", widthM: "3.0", depthM: "1.5", priceRub: 1_005_000, shape: "rectangular", description: "компактная чаша для небольшого участка" },
+  { id: "minipool-6330", line: "Minipool", model: "Minipool 6330", lengthM: "6.3", widthM: "3.0", depthM: "1.5", priceRub: 1_150_000, shape: "rectangular", description: "компактная чаша для небольшого участка" },
+  { id: "classic-8537", line: "Classic", model: "Classic 8537", lengthM: "8.5", widthM: "3.7", depthM: "1.1-1.7", priceRub: 1_820_000, shape: "rectangular", description: "классическая прямоугольная чаша" },
+  { id: "rio-7737", line: "Rio", model: "RIO 7737", lengthM: "7.7", widthM: "3.7", depthM: "1.1-1.75", priceRub: 1_700_000, shape: "rectangular", description: "чаша с увеличенной зоной отдыха" },
+  { id: "rio-8737", line: "Rio", model: "RIO 8737", lengthM: "8.7", widthM: "3.7", depthM: "1.2-1.8", priceRub: 1_890_000, shape: "rectangular", description: "чаша с увеличенной зоной отдыха" },
+  { id: "rio-9737", line: "Rio", model: "RIO 9737", lengthM: "9.7", widthM: "3.7", depthM: "1.2-1.8", priceRub: 2_095_000, shape: "rectangular", description: "чаша с увеличенной зоной отдыха" },
+  { id: "quick-5025", line: "Quick", model: "QUICK 5025", lengthM: "5.0", widthM: "2.5", depthM: "1.5", priceRub: 915_000, shape: "rectangular", description: "узкий lap-pool для плавания" },
+  { id: "quick-6025", line: "Quick", model: "QUICK 6025", lengthM: "6.0", widthM: "2.5", depthM: "1.6", priceRub: 1_100_000, shape: "rectangular", description: "узкий lap-pool для плавания" },
+  { id: "quick-7025", line: "Quick", model: "QUICK 7025", lengthM: "7.0", widthM: "2.5", depthM: "1.6", priceRub: 1_270_000, shape: "rectangular", description: "узкий lap-pool для плавания" },
+  { id: "spa-4025", line: "Spa", model: "SPA 4025", lengthM: "4.0", widthM: "2.5", depthM: "1.0", priceRub: 680_000, shape: "rectangular", description: "компактная SPA-чаша" }
+];
+
+const poolFinishes = [
+  "Emerald Gelcoat",
+  "Black Galaxy Gelcoat",
+  "Coral Gelcoat",
+  "Blue Iridium Gelcoat",
+  "Granite Gelcoat",
+  "Tiffany Blue Gelcoat",
+  "Sea Foam Gelcoat",
+  "Russian S-Line Gelcoat",
+  "Sandy Beach Gelcoat"
+];
+
+const emptyPoolProductParams = {
+  poolModelId: "",
+  poolModelName: "",
+  poolModelLine: "",
+  depthM: "",
+  priceRub: ""
+};
 
 const featuredTestCaseIds = ["TC-01"];
 
@@ -721,6 +779,7 @@ function paramsFromCalibratedZone(
   const widthM = clamp((nextZone.heightPct * imageSize.height) / pxPerMeter, 0.5, 25);
   return {
     ...currentParams,
+    ...emptyPoolProductParams,
     lengthM: formatMeterValue(lengthM),
     widthM: formatMeterValue(widthM)
   };
@@ -739,6 +798,7 @@ function paramsFromZoneScale(originZone: Zone, nextZone: Zone, originParams: typ
   const widthM = clamp(parsePositiveNumber(originParams.widthM, 3) * scale, 0.5, 25);
   return {
     ...originParams,
+    ...emptyPoolProductParams,
     lengthM: formatMeterValue(lengthM),
     widthM: formatMeterValue(widthM)
   };
@@ -752,6 +812,28 @@ function parsePositiveNumber(value: string, fallback: number) {
 
 function shapeLabel(value: string) {
   return shapeOptions.find((option) => option.value === value)?.label || "Прямоугольный";
+}
+
+function priceLabel(value: number | string) {
+  const numberValue = Number(value);
+  if (!Number.isFinite(numberValue) || numberValue <= 0) return "";
+  return `${numberValue.toLocaleString("ru-RU")} ₽`;
+}
+
+function poolProductLabel(product: PoolProduct) {
+  return `${product.model} · ${product.lengthM.replace(".", ",")} x ${product.widthM.replace(".", ",")} м · ${priceLabel(product.priceRub)}`;
+}
+
+function poolProductById(id: string) {
+  return poolProducts.find((product) => product.id === id) || null;
+}
+
+function poolProductGroups() {
+  return Array.from(new Set(poolProducts.map((product) => product.line)))
+    .map((line) => ({
+      line,
+      products: poolProducts.filter((product) => product.line === line)
+    }));
 }
 
 function pointInsideZone(point: { x: number; y: number }, currentZone: Zone | null) {
@@ -1077,6 +1159,7 @@ export default function App() {
   const selectedTestCase = testCases.find((item) => item.caseId === selectedTestCaseId);
   const selectedCaseUi = uiCase(selectedTestCase);
   const selectedTaskCaseUi = selectedTask ? uiCase(testCases.find((item) => item.caseId === selectedTask.caseId)) : null;
+  const selectedPoolProduct = poolProductById(params.poolModelId);
   const poolAspect = useMemo(() => poolAspectFromParams(params), [params.lengthM, params.widthM]);
   const visibleCalibration = useMemo<CalibrationLine | null>(() => (
     calibrationDraft
@@ -1154,6 +1237,7 @@ export default function App() {
     if (resize && activeZone) return paramsFromZoneScale(resize.origin, activeZone, resize.originParams);
     return params;
   }, [activeZone, calibration, draft, imageSize, params, resize]);
+  const displayedPoolProduct = poolProductById(displayParams.poolModelId);
 
   const readiness = useMemo(() => {
     const lengthM = parsePositiveNumber(params.lengthM, 0);
@@ -1179,7 +1263,8 @@ export default function App() {
     setDraft(null);
     setMove(null);
     setResize(null);
-    const nextParams = { ...params, [name]: value };
+    const clearsProduct = name === "lengthM" || name === "widthM" || name === "shape";
+    const nextParams = { ...params, ...(clearsProduct ? emptyPoolProductParams : {}), [name]: value };
     setParams(nextParams);
     if (name === "lengthM" || name === "widthM" || name === "shape") {
       setPlacementSummary("Параметры изменились. При необходимости уточните контур по фото.");
@@ -1193,6 +1278,42 @@ export default function App() {
           : current
       );
     }
+  }
+
+  function applyPoolProduct(productId: string) {
+    beginDraftEdit();
+    setDraft(null);
+    setMove(null);
+    setResize(null);
+    const product = poolProductById(productId);
+    const nextParams = product
+      ? {
+          ...params,
+          poolModelId: product.id,
+          poolModelName: product.model,
+          poolModelLine: product.line,
+          lengthM: product.lengthM,
+          widthM: product.widthM,
+          depthM: product.depthM,
+          priceRub: String(product.priceRub),
+          shape: product.shape
+        }
+      : {
+          ...params,
+          ...emptyPoolProductParams
+        };
+    setParams(nextParams);
+    setPlacementSummary(product
+      ? `Выбрана чаша ${product.model}. Контур перестроен по пропорциям модели.`
+      : "Модель чаши сброшена. Размеры можно задать вручную."
+    );
+    setZone((current) =>
+      current
+        ? calibration
+          ? zoneFromCalibratedParams(current, imageSize, nextParams, calibration)
+          : fitZoneToParamsChange(current, imageSize, nextParams)
+        : current
+    );
   }
 
   function updateCalibrationMeters(value: string) {
@@ -2184,6 +2305,7 @@ export default function App() {
           <div className="input-meta">
             <span>{photo ? `Фото ${imageSize.width} x ${imageSize.height} px` : "Нет фото"}</span>
             <span>Размер {displayParams.lengthM || "?"} x {displayParams.widthM || "?"} м · {shapeLabel(displayParams.shape)}</span>
+            {displayedPoolProduct ? <span>{displayedPoolProduct.model} · глубина {displayedPoolProduct.depthM} м</span> : null}
           </div>
           {placementSummary ? <div className="mask-note placement-summary">{placementSummary}</div> : null}
           {activeZone && calibration ? (
@@ -2205,6 +2327,26 @@ export default function App() {
             </div>
 
             <div className="form-grid">
+              <label className="wide">
+                <span>Модель чаши</span>
+                <select value={params.poolModelId} onChange={(event) => applyPoolProduct(event.target.value)}>
+                  <option value="">Вручную</option>
+                  {poolProductGroups().map((group) => (
+                    <optgroup key={group.line} label={group.line}>
+                      {group.products.map((product) => (
+                        <option key={product.id} value={product.id}>{poolProductLabel(product)}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </label>
+              {selectedPoolProduct ? (
+                <div className="product-summary wide">
+                  <strong>{selectedPoolProduct.model}</strong>
+                  <span>{selectedPoolProduct.description}</span>
+                  <em>{selectedPoolProduct.lengthM.replace(".", ",")} x {selectedPoolProduct.widthM.replace(".", ",")} м · глубина {selectedPoolProduct.depthM.replaceAll(".", ",")} м · {priceLabel(selectedPoolProduct.priceRub)}</em>
+                </div>
+              ) : null}
               <label>
                 <span>Длина, м</span>
                 <input inputMode="decimal" value={params.lengthM} onChange={(event) => updateParam("lengthM", event.target.value)} />
@@ -2217,6 +2359,12 @@ export default function App() {
                 <span>Форма</span>
                 <select value={params.shape} onChange={(event) => updateParam("shape", event.target.value)}>
                   {shapeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>Покрытие</span>
+                <select value={params.poolFinish} onChange={(event) => updateParam("poolFinish", event.target.value)}>
+                  {poolFinishes.map((finish) => <option key={finish} value={finish}>{finish}</option>)}
                 </select>
               </label>
               <label className="wide">

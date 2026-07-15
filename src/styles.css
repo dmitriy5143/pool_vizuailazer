@@ -1057,6 +1057,34 @@ textarea:focus {
   grid-column: 1 / -1;
 }
 
+.product-summary {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid #cde3e8;
+  border-radius: 7px;
+  background: linear-gradient(135deg, #f7fbfc, #eef8f9);
+  color: #244651;
+}
+
+.product-summary strong {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.product-summary span,
+.product-summary em {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #55717a;
+}
+
+.product-summary em {
+  font-style: normal;
+  font-weight: 650;
+  color: #146474;
+}
+
 .generate-button,
 .suggest-button,
 .secondary-action,
