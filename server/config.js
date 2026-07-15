@@ -2,7 +2,7 @@ export const DEFAULTS = {
   port: 5177,
   appPublicUrl: "http://localhost:5177",
   generationMode: "auto",
-  openrouterImageModel: "bytedance-seed/seedream-4.5",
+  openrouterImageModel: "google/gemini-3.1-flash-image",
   openrouterAppTitle: "Pool AI Visualizer Demo",
   openrouterHttpReferer: "http://localhost:5177",
   openrouterImageQuality: "high",

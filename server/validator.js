@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import sharp from "sharp";
+
 import { DEFAULTS, envInt, envString } from "./config.js";
 
 const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -150,6 +152,127 @@ function localAssessment(image, mode = "review") {
     confidence: mode === "show" ? 0.7 : 0.35
   };
   return normalizeAssessment(base, image, "local-precheck");
+}
+
+async function readRgbAtSize(filePath, width, height) {
+  const { data } = await sharp(filePath)
+    .rotate()
+    .resize(width, height, { fit: "fill" })
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return data;
+}
+
+async function readMaskAtSize(filePath, width, height) {
+  const { data } = await sharp(filePath)
+    .resize(width, height, { fit: "fill", kernel: "nearest" })
+    .greyscale()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return data;
+}
+
+async function measureOutsideMaskChange({ originalPath, generatedPath, maskPath }) {
+  if (!originalPath || !generatedPath || !maskPath) return null;
+  const metadata = await sharp(originalPath).metadata();
+  const width = metadata.width;
+  const height = metadata.height;
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
+
+  const original = await readRgbAtSize(originalPath, width, height);
+  const generated = await readRgbAtSize(generatedPath, width, height);
+  const mask = await readMaskAtSize(maskPath, width, height);
+  let outsideCount = 0;
+  let diffSum = 0;
+  let highDiffCount = 0;
+  let veryHighDiffCount = 0;
+
+  for (let i = 0, pixel = 0; pixel < mask.length; pixel += 1, i += 3) {
+    if (mask[pixel] >= 20) continue;
+    const diff = (
+      Math.abs(original[i] - generated[i]) +
+      Math.abs(original[i + 1] - generated[i + 1]) +
+      Math.abs(original[i + 2] - generated[i + 2])
+    ) / 3;
+    outsideCount += 1;
+    diffSum += diff;
+    if (diff > 45) highDiffCount += 1;
+    if (diff > 70) veryHighDiffCount += 1;
+  }
+
+  if (!outsideCount) return null;
+  return {
+    outsideMeanDiff: diffSum / outsideCount,
+    outsideHighDiffRatio: highDiffCount / outsideCount,
+    outsideVeryHighDiffRatio: veryHighDiffCount / outsideCount
+  };
+}
+
+async function localImageGuard({ image, dataDir, originalPath, maskUrl }) {
+  const generatedPath = localFilePathFromUrl(dataDir, image.url);
+  const maskPath = localFilePathFromUrl(dataDir, maskUrl);
+  if (!generatedPath || !maskPath) return null;
+  try {
+    const metric = await measureOutsideMaskChange({ originalPath, generatedPath, maskPath });
+    if (!metric) return null;
+    const { outsideMeanDiff, outsideHighDiffRatio, outsideVeryHighDiffRatio } = metric;
+    const metricText = `outside mean=${outsideMeanDiff.toFixed(1)}, high=${Math.round(outsideHighDiffRatio * 100)}%, veryHigh=${Math.round(outsideVeryHighDiffRatio * 100)}%`;
+    if (outsideMeanDiff > 40 || outsideHighDiffRatio > 0.3 || outsideVeryHighDiffRatio > 0.18) {
+      return {
+        action: "hide",
+        preservation: 1,
+        zone: 2,
+        issue: `Локальная проверка: вне выделенной зоны слишком сильно изменилась сцена (${metricText}).`,
+        metric
+      };
+    }
+    if (outsideMeanDiff > 26 || outsideHighDiffRatio > 0.18 || outsideVeryHighDiffRatio > 0.08) {
+      return {
+        action: "review",
+        preservation: 3,
+        zone: 3,
+        issue: `Локальная проверка: вне выделенной зоны есть заметные изменения (${metricText}).`,
+        metric
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function buildLocalGuards({ images, dataDir, originalPath, maskUrl, abortSignal }) {
+  const entries = [];
+  for (const image of images) {
+    throwIfAborted(abortSignal);
+    const guard = await localImageGuard({ image, dataDir, originalPath, maskUrl });
+    if (guard) entries.push([image.id, guard]);
+  }
+  return Object.fromEntries(entries);
+}
+
+function applyLocalGuards(autoRatings, guards) {
+  const merged = { ...autoRatings };
+  for (const [imageId, guard] of Object.entries(guards || {})) {
+    const current = merged[imageId];
+    if (!current) continue;
+    current.preservation = Math.min(current.preservation, guard.preservation);
+    current.zone = Math.min(current.zone, guard.zone);
+    current.issues = Array.from(new Set([...(current.issues || []), guard.issue])).slice(0, 8);
+    current.notes = current.notes
+      ? `${current.notes} ${guard.issue}`.slice(0, 700)
+      : guard.issue.slice(0, 700);
+    current.confidence = Math.max(current.confidence || 0, 0.75);
+    if (guard.action === "hide") {
+      current.action = "hide";
+      current.sendable = false;
+    } else if (guard.action === "review" && current.action === "show") {
+      current.action = "review";
+      current.sendable = false;
+    }
+  }
+  return merged;
 }
 
 function contentToText(content) {
@@ -330,9 +453,19 @@ export async function validateGeneratedImages({
 
   const validationMode = envString("OPENROUTER_VALIDATION_MODE", DEFAULTS.openrouterValidationMode);
   const shouldUseOpenRouter = validationMode !== "off" && mode === "openrouter" && Boolean(process.env.OPENROUTER_API_KEY);
+  const localGuards = await buildLocalGuards({
+    images,
+    dataDir,
+    originalPath,
+    maskUrl: result.maskUrl,
+    abortSignal
+  });
   if (!shouldUseOpenRouter) {
     const fallbackAction = mode === "mock" ? "show" : "review";
-    const autoRatings = Object.fromEntries(images.map((image) => [image.id, localAssessment(image, fallbackAction)]));
+    const autoRatings = applyLocalGuards(
+      Object.fromEntries(images.map((image) => [image.id, localAssessment(image, fallbackAction)])),
+      localGuards
+    );
     return {
       autoRatings,
       summary: summarize(autoRatings, validationMode === "off" ? "disabled" : "local-precheck"),
@@ -379,11 +512,15 @@ export async function validateGeneratedImages({
       const raw = rawVariants.find((item) => item?.id === image.id || item?.label === image.label) || {};
       autoRatings[image.id] = normalizeAssessment(raw, image, `openrouter:${model}`);
     }
-    const summary = summarize(autoRatings, `openrouter:${model}`, parsed.summary);
-    return { autoRatings, summary, warnings: [] };
+    const guardedRatings = applyLocalGuards(autoRatings, localGuards);
+    const summary = summarize(guardedRatings, `openrouter:${model}`, parsed.summary);
+    return { autoRatings: guardedRatings, summary, warnings: [] };
   } catch (error) {
     if (error.status === 499) throw error;
-    const autoRatings = Object.fromEntries(images.map((image) => [image.id, localAssessment(image, "review")]));
+    const autoRatings = applyLocalGuards(
+      Object.fromEntries(images.map((image) => [image.id, localAssessment(image, "review")])),
+      localGuards
+    );
     return {
       autoRatings,
       summary: summarize(autoRatings, "validation-failed"),
