@@ -129,19 +129,20 @@ function numberFromUser(value) {
   return Number.isFinite(numberValue) ? numberValue : NaN;
 }
 
-function normalizeGenerationParams(params) {
+function normalizeGenerationParams(params = {}) {
+  const safeParams = { ...(params || {}) };
+  delete safeParams[["price", "Rub"].join("")];
   return {
-    ...params,
-    lengthM: String(numberFromUser(params.lengthM)),
-    widthM: String(numberFromUser(params.widthM)),
-    depthM: safeText(params.depthM, "", 80),
-    poolModelId: safeText(params.poolModelId, "", 120),
-    poolModelName: safeText(params.poolModelName, "", 160),
-    poolModelLine: safeText(params.poolModelLine, "", 120),
-    poolFinish: safeText(params.poolFinish, "", 160),
-    priceRub: safeText(params.priceRub, "", 80),
-    materials: safeText(params.materials, "", 1000),
-    notes: safeText(params.notes, "", 2000)
+    ...safeParams,
+    lengthM: String(numberFromUser(safeParams.lengthM)),
+    widthM: String(numberFromUser(safeParams.widthM)),
+    depthM: safeText(safeParams.depthM, "", 80),
+    poolModelId: safeText(safeParams.poolModelId, "", 120),
+    poolModelName: safeText(safeParams.poolModelName, "", 160),
+    poolModelLine: safeText(safeParams.poolModelLine, "", 120),
+    poolFinish: safeText(safeParams.poolFinish, "", 160),
+    materials: safeText(safeParams.materials, "", 1000),
+    notes: safeText(safeParams.notes, "", 2000)
   };
 }
 
