@@ -6,7 +6,7 @@ export const DEFAULTS = {
   openrouterAppTitle: "Pool AI Visualizer Demo",
   openrouterHttpReferer: "http://localhost:5177",
   openrouterImageQuality: "high",
-  openrouterImageResolution: "1K",
+  openrouterImageResolution: "4K",
   openrouterImageFormat: "png",
   openrouterVariantStrategy: "parallel",
   openrouterSingleImageConcurrency: 3,
@@ -19,11 +19,15 @@ export const DEFAULTS = {
   openrouterValidationMode: "auto",
   openrouterValidationModel: "google/gemini-2.5-flash",
   openrouterValidationTimeoutMs: 90_000,
+  openrouterPlacementMode: "auto",
+  openrouterPlacementModel: "google/gemini-2.5-flash",
+  openrouterPlacementTimeoutMs: 60_000,
   taskWorkerConcurrency: 2,
   taskRetryAttempts: 2,
   taskRetryBaseMs: 1800,
   taskRetryMaxMs: 45_000,
   requestHistoryLimit: 100,
+  maxVariantCount: 20,
   maxUploadImagePixels: 25_000_000
 };
 

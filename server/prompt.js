@@ -43,7 +43,7 @@ export function buildPrompt({ params, zone, variantIndex = null, feedback = "" }
     "Add an outdoor swimming pool only inside the selected zone.",
     zoneText,
     zone
-      ? "Reference image #1 is the original photo. Reference image #2 is a black-and-white rectangular placement mask, not a design reference: white marks the only editable pool placement area, black marks the area to preserve. The requested pool shape must fit inside this rectangular edit zone."
+      ? "Reference image #1 is the original photo. Reference image #2 is a black-and-white placement mask, not a design reference: white marks the exact intended pool footprint / editable placement area for the requested shape, black marks the area to preserve."
       : "",
     "Use the original photo as the primary reference. Use the mask and coordinates as the user's intended visible pool footprint and placement area; do not treat them as a loose suggestion. Do not draw the mask, border, guide colors, labels, or UI overlays into the output.",
     `Pool dimensions requested: ${params.lengthM || "not specified"}m x ${params.widthM || "not specified"}m.`,

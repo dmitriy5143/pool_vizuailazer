@@ -26,6 +26,7 @@ type Config = {
   hasOpenRouterKey: boolean;
   model: string;
   taskWorkerConcurrency?: number;
+  placementModel?: string;
 };
 
 type Zone = {
@@ -190,6 +191,14 @@ type TestCase = {
   };
 };
 
+type PlacementSuggestion = {
+  zone: Zone;
+  source: string;
+  confidence: number;
+  summary: string;
+  warnings?: string[];
+};
+
 const defaultParams = {
   lengthM: "7",
   widthM: "3",
@@ -222,6 +231,8 @@ const shapeOptions = [
   { value: "oval", label: "Овальный" },
   { value: "freeform", label: "Свободный" }
 ];
+
+const featuredTestCaseIds = ["TC-01"];
 
 const caseCopy: Record<string, {
   name: string;
@@ -483,6 +494,12 @@ function zoneToStyle(zone: Zone | null) {
   };
 }
 
+function shapeClass(value?: string) {
+  if (value === "oval") return "shape-oval";
+  if (value === "freeform") return "shape-freeform";
+  return "shape-rectangular";
+}
+
 function zoneFromPercents(rect: Pick<Zone, "xPct" | "yPct" | "widthPct" | "heightPct">, imageSize: { width: number; height: number }): Zone {
   return {
     x: Math.round(rect.xPct * imageSize.width),
@@ -578,6 +595,75 @@ function fitZoneToParamsChange(
   nextParams: typeof defaultParams,
 ): Zone {
   return fitZoneToAspect(zone, imageSize, poolAspectFromParams(nextParams));
+}
+
+function defaultZoneForParams(imageSize: { width: number; height: number }, params: typeof defaultParams): Zone {
+  const imageAspect = imageSize.width / Math.max(1, imageSize.height);
+  const aspect = poolAspectFromParams(params);
+  let widthPct = 0.48;
+  let heightPct = (widthPct * imageAspect) / aspect;
+
+  if (heightPct > 0.48) {
+    heightPct = 0.48;
+    widthPct = (heightPct * aspect) / imageAspect;
+  }
+  if (widthPct > 0.68) {
+    widthPct = 0.68;
+    heightPct = (widthPct * imageAspect) / aspect;
+  }
+
+  widthPct = clamp(widthPct, 0.16, 0.72);
+  heightPct = clamp(heightPct, 0.14, 0.52);
+  return zoneFromPercents(
+    {
+      xPct: 0.5 - widthPct / 2,
+      yPct: 0.58 - heightPct / 2,
+      widthPct,
+      heightPct
+    },
+    imageSize
+  );
+}
+
+function loadImageElement(url: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Не удалось подготовить фото для VLM."));
+    image.src = url;
+  });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("Не удалось сжать фото для VLM."));
+    }, type, quality);
+  });
+}
+
+async function createPlacementPhoto(file: File) {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = await loadImageElement(url);
+    const maxSide = 1024;
+    const scale = Math.min(1, maxSide / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height, 1));
+    if (scale >= 0.98 && file.size <= 900_000 && file.type === "image/jpeg") return file;
+    const width = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
+    const height = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Не удалось подготовить фото для VLM.");
+    context.drawImage(image, 0, 0, width, height);
+    const blob = await canvasToBlob(canvas, "image/jpeg", 0.72);
+    const filename = filenameFromUrl(file.name || "yard.jpg", "yard.jpg").replace(/\.[a-z0-9]+$/i, "");
+    return new File([blob], `${filename}-vlm.jpg`, { type: "image/jpeg" });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 function calibrationDistancePx(line: CalibrationLine | DraftRect | null, imageSize: { width: number; height: number }) {
@@ -700,6 +786,13 @@ function uiCaseParams(testCase: TestCase) {
     materials: copy?.materials || testCase.params.materials || defaultParams.materials,
     notes: copy?.notes || testCase.params.notes || ""
   };
+}
+
+function featuredTestCases(payload: unknown): TestCase[] {
+  if (!Array.isArray(payload)) return [];
+  return featuredTestCaseIds
+    .map((caseId) => payload.find((item): item is TestCase => item?.caseId === caseId))
+    .filter((item): item is TestCase => Boolean(item));
 }
 
 function scoreAverage(rating: Rating) {
@@ -959,6 +1052,8 @@ export default function App() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [isSubmitting, setSubmitting] = useState(false);
+  const [isSuggestingPlacement, setSuggestingPlacement] = useState(false);
+  const [placementSummary, setPlacementSummary] = useState("");
   const [isRegenerating, setRegenerating] = useState(false);
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [selectedTestCaseId, setSelectedTestCaseId] = useState("");
@@ -983,8 +1078,6 @@ export default function App() {
   const selectedCaseUi = uiCase(selectedTestCase);
   const selectedTaskCaseUi = selectedTask ? uiCase(testCases.find((item) => item.caseId === selectedTask.caseId)) : null;
   const poolAspect = useMemo(() => poolAspectFromParams(params), [params.lengthM, params.widthM]);
-  const calibrationPxPerMeter = useMemo(() => calibrationPixelsPerMeter(calibration, imageSize), [calibration, imageSize]);
-  const calibrationLabel = calibrationPxPerMeter ? `${Math.round(calibrationPxPerMeter)} px/м` : "Без масштаба";
   const visibleCalibration = useMemo<CalibrationLine | null>(() => (
     calibrationDraft
       ? {
@@ -997,10 +1090,10 @@ export default function App() {
       : calibration
   ), [calibration, calibrationDraft, calibrationMeters]);
   const stageHintText = editMode === "calibration"
-    ? "Проведите линию известной длины."
+    ? "Проведите известный отрезок на фото."
     : calibration
-      ? "Контур = маска. Размер считается от масштаба."
-      : "Контур = маска. Без масштаба размер визуальный.";
+      ? "Контур = маска. Размер связан с отрезком."
+      : "Контур = маска. Настройте его визуально.";
 
   function taskTitleForUi(task: GenerationTask) {
     const copy = uiCase(testCases.find((item) => item.caseId === task.caseId));
@@ -1019,7 +1112,7 @@ export default function App() {
   useEffect(() => {
     fetch("/test-cases.json")
       .then((response) => (response.ok ? response.json() : []))
-      .then((payload) => setTestCases(Array.isArray(payload) ? payload : []))
+      .then((payload) => setTestCases(featuredTestCases(payload)))
       .catch(() => setTestCases([]));
   }, []);
 
@@ -1088,6 +1181,9 @@ export default function App() {
     setResize(null);
     const nextParams = { ...params, [name]: value };
     setParams(nextParams);
+    if (name === "lengthM" || name === "widthM" || name === "shape") {
+      setPlacementSummary("Параметры изменились. При необходимости уточните контур по фото.");
+    }
     if (name === "lengthM" || name === "widthM") {
       setZone((current) =>
         current
@@ -1226,6 +1322,7 @@ export default function App() {
     setImageSize({ width: 1280, height: 820 });
     if (photoUrl) URL.revokeObjectURL(photoUrl);
     setPhotoUrl(file ? URL.createObjectURL(file) : "");
+    setPlacementSummary("");
   }
 
   function getPointerPosition(event: PointerEvent<Element>) {
@@ -1489,6 +1586,56 @@ export default function App() {
     const testCase = testCases.find((item) => item.caseId === caseId);
     if (testCase) void loadTestCase(testCase, requestSeq);
     else setLoadingCase(false);
+  }
+
+  async function suggestPlacement() {
+    setError("");
+    if (!photo) {
+      setError("Загрузите фото участка.");
+      return;
+    }
+    if (isLoadingCase) {
+      setError("Дождитесь загрузки примера.");
+      return;
+    }
+    const lengthM = parsePositiveNumber(params.lengthM, 0);
+    const widthM = parsePositiveNumber(params.widthM, 0);
+    if (!lengthM || !widthM) {
+      setError("Укажите длину и ширину.");
+      return;
+    }
+
+    setSuggestingPlacement(true);
+    try {
+      beginDraftEdit();
+      setDraft(null);
+      setMove(null);
+      setResize(null);
+      const currentZone = activeZone || zone || defaultZoneForParams(imageSize, params);
+      const analysisPhoto = await createPlacementPhoto(photo);
+      const formData = new FormData();
+      formData.append("photo", analysisPhoto);
+      formData.append("params", JSON.stringify(params));
+      formData.append("zone", JSON.stringify(currentZone));
+      const response = await fetch("/api/suggest-zone", { method: "POST", body: formData });
+      const payload = await response.json().catch(() => null) as (PlacementSuggestion & { error?: string }) | null;
+      if (!response.ok || !payload || !("zone" in payload)) {
+        throw new Error(payload?.error || "Не удалось уточнить контур.");
+      }
+      const suggestedZone = zoneFromPercents(payload.zone, imageSize);
+      const nextZone = calibration
+        ? zoneFromCalibratedParams(suggestedZone, imageSize, params, calibration)
+        : fitZoneToParamsChange(suggestedZone, imageSize, params);
+      setZone(nextZone);
+      const sourceLabelText = payload.source?.startsWith("openrouter:") ? "VLM" : "примерный алгоритм";
+      const warningText = payload.warnings?.length ? ` ${payload.warnings.join(" ")}` : "";
+      setPlacementSummary(`${sourceLabelText}: ${payload.summary || "контур уточнен."}${warningText}`);
+      showNotice("Контур уточнен.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось уточнить контур.");
+    } finally {
+      setSuggestingPlacement(false);
+    }
   }
 
   async function createTask(event?: FormEvent) {
@@ -1896,41 +2043,37 @@ export default function App() {
 
           {photoUrl ? (
             <div className="calibration-tools">
-              <div className="segmented-control" aria-label="Режим разметки">
-                <button
-                  type="button"
-                  className={editMode === "pool" ? "active" : ""}
-                  onClick={() => {
+              <div className="scale-copy">
+                <strong>Известная длина</strong>
+              </div>
+              {(editMode === "calibration" || calibration) ? (
+                <label>
+                  <span>Отрезок, м</span>
+                  <input inputMode="decimal" value={calibrationMeters} onChange={(event) => updateCalibrationMeters(event.target.value)} />
+                </label>
+              ) : null}
+              <button
+                type="button"
+                className={`icon-text-button ${editMode === "calibration" ? "active" : ""}`}
+                onClick={() => {
+                  if (calibration) {
+                    resetCalibration();
+                    return;
+                  }
+                  if (editMode === "calibration") {
                     setEditMode("pool");
                     setCalibrationDraft(null);
-                  }}
-                >
-                  Контур
-                </button>
-                <button
-                  type="button"
-                  className={editMode === "calibration" ? "active" : ""}
-                  onClick={() => {
-                    setEditMode("calibration");
-                    setDraft(null);
-                    setMove(null);
-                    setResize(null);
-                  }}
-                >
-                  Калибровка
-                </button>
-              </div>
-              <label>
-                <span>Линия, м</span>
-                <input inputMode="decimal" value={calibrationMeters} onChange={(event) => updateCalibrationMeters(event.target.value)} />
-              </label>
-              <span className={`calibration-status ${calibration ? "ready" : ""}`}>{calibrationLabel}</span>
-              {calibration ? (
-                <button className="icon-text-button" type="button" onClick={resetCalibration}>
-                  <RotateCcw size={15} />
-                  Сброс
-                </button>
-              ) : null}
+                    return;
+                  }
+                  setEditMode("calibration");
+                  setDraft(null);
+                  setMove(null);
+                  setResize(null);
+                }}
+              >
+                {calibration ? <RotateCcw size={15} /> : <Target size={15} />}
+                {calibration ? "Сброс" : editMode === "calibration" ? "Отмена" : "Задать"}
+              </button>
             </div>
           ) : null}
 
@@ -1970,20 +2113,28 @@ export default function App() {
                             imageWidth: nextSize.width,
                             imageHeight: nextSize.height
                           }
-                        : null
+                        : defaultZoneForParams(nextSize, params)
                     );
                   }}
                 />
                 {visibleCalibration ? (
-                  <svg className="calibration-overlay" aria-hidden="true">
+                  <svg className="calibration-overlay" viewBox={`0 0 ${imageSize.width} ${imageSize.height}`} preserveAspectRatio="none" aria-hidden="true">
                     <line
-                      x1={`${visibleCalibration.startX * 100}%`}
-                      y1={`${visibleCalibration.startY * 100}%`}
-                      x2={`${visibleCalibration.endX * 100}%`}
-                      y2={`${visibleCalibration.endY * 100}%`}
+                      x1={visibleCalibration.startX * imageSize.width}
+                      y1={visibleCalibration.startY * imageSize.height}
+                      x2={visibleCalibration.endX * imageSize.width}
+                      y2={visibleCalibration.endY * imageSize.height}
                     />
-                    <circle cx={`${visibleCalibration.startX * 100}%`} cy={`${visibleCalibration.startY * 100}%`} r="5" />
-                    <circle cx={`${visibleCalibration.endX * 100}%`} cy={`${visibleCalibration.endY * 100}%`} r="5" />
+                    <circle
+                      cx={visibleCalibration.startX * imageSize.width}
+                      cy={visibleCalibration.startY * imageSize.height}
+                      r={Math.max(7, Math.min(imageSize.width, imageSize.height) * 0.006)}
+                    />
+                    <circle
+                      cx={visibleCalibration.endX * imageSize.width}
+                      cy={visibleCalibration.endY * imageSize.height}
+                      r={Math.max(7, Math.min(imageSize.width, imageSize.height) * 0.006)}
+                    />
                   </svg>
                 ) : null}
                 {visibleCalibration ? (
@@ -1998,7 +2149,7 @@ export default function App() {
                   </span>
                 ) : null}
                 {activeZone ? (
-                  <div className="selection" style={zoneToStyle(activeZone)}>
+                  <div className={`selection ${shapeClass(displayParams.shape)}`} style={zoneToStyle(activeZone)}>
                     <div className="pool-preview">
                       <span className="pool-water" />
                       <span className="pool-glint" />
@@ -2032,15 +2183,12 @@ export default function App() {
 
           <div className="input-meta">
             <span>{photo ? `Фото ${imageSize.width} x ${imageSize.height} px` : "Нет фото"}</span>
-            <span>{activeZone ? "Маска = видимый контур" : "Нет маски"}</span>
-            <span>{calibration ? "Масштаб включен" : "Размер визуальный"}</span>
             <span>Размер {displayParams.lengthM || "?"} x {displayParams.widthM || "?"} м · {shapeLabel(displayParams.shape)}</span>
           </div>
-          {activeZone ? (
+          {placementSummary ? <div className="mask-note placement-summary">{placementSummary}</div> : null}
+          {activeZone && calibration ? (
             <div className="mask-note">
-              {calibration
-                ? "Контур считается от калибровочной линии. В генерацию уйдет этот контур и эти размеры."
-                : "Без калибровки метры задают пропорцию и смысл, а размер выбирается визуально."}
+              Контур можно двигать и менять. В генерацию уйдет видимая маска и эти размеры.
             </div>
           ) : null}
           {qualityWarning ? <div className="soft-warning">{qualityWarning}</div> : null}
@@ -2089,17 +2237,18 @@ export default function App() {
               </label>
               <label>
                 <span>Варианты</span>
-                <select
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  step={1}
                   value={variants}
                   onChange={(event) => {
                     beginDraftEdit();
-                    setVariants(Number(event.target.value));
+                    const nextValue = Math.max(1, Math.round(Number(event.target.value) || 1));
+                    setVariants(nextValue);
                   }}
-                >
-                  <option value={3}>3</option>
-                  <option value={4}>4</option>
-                  <option value={5}>5</option>
-                </select>
+                />
               </label>
               <label className="wide">
                 <span>Заметки (необязательно)</span>
@@ -2111,6 +2260,18 @@ export default function App() {
                   }}
                 />
               </label>
+            </div>
+
+            <div className="placement-action">
+              <button
+                type="button"
+                className="suggest-button"
+                onClick={() => void suggestPlacement()}
+                disabled={!photo || isLoadingCase || isSuggestingPlacement}
+              >
+                {isSuggestingPlacement ? <Loader2 className="spin" size={17} /> : <Wand2 size={17} />}
+                {isSuggestingPlacement ? "Уточняю..." : "Уточнить контур"}
+              </button>
             </div>
 
             {error ? <div className="error">{error}</div> : null}
@@ -2245,14 +2406,6 @@ export default function App() {
             {selectedTask.status === "queued" ? <div className="loading"><Clock3 size={22} /><span>Ждет очередь.</span></div> : null}
             {selectedTask.status === "running" ? <div className="loading"><Loader2 className="spin" size={22} /><span>Генерация идет в фоне.</span></div> : null}
             {selectedTask.status === "paused" ? <div className="soft-warning">Задача на паузе.</div> : null}
-
-            {selectedTask.caseMeta ? (
-              <div className="case-summary">
-                <strong>{selectedTaskCaseUi?.name || selectedTask.caseMeta.caseName || selectedTask.caseId}</strong>
-                <span>{selectedTaskCaseUi?.risk || selectedTask.caseMeta.mainRisk || selectedTask.notes}</span>
-                <em>{selectedTaskCaseUi?.success || selectedTask.caseMeta.successCriteria}</em>
-              </div>
-            ) : null}
 
             {selectedTask.validation || selectedSafety ? (
               <div className={`validation-summary ${selectedSafety?.hide ? "blocked" : selectedSafety?.review ? "review" : "passed"}`}>

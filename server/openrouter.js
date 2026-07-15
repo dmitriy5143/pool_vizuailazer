@@ -135,14 +135,25 @@ function requestParameterSupported(capabilities, name) {
   return false;
 }
 
-function supportedEnvValue(capabilities, name, envName, fallback) {
+function supportedEnvValue(capabilities, name, envName, fallback, overrideValue = "") {
   if (!requestParameterSupported(capabilities, name)) return undefined;
-  const value = envString(envName, fallback);
+  const value = overrideValue || envString(envName, fallback);
   const descriptor = capabilities?.supported_parameters?.[name];
   if (descriptor?.type === "enum" && Array.isArray(descriptor.values) && !descriptor.values.includes(value)) {
     return undefined;
   }
   return value;
+}
+
+function resolutionFallbackForSizeError(capabilities, currentOverride = "") {
+  if (!requestParameterSupported(capabilities, "resolution")) return "";
+  const descriptor = capabilities?.supported_parameters?.resolution;
+  const supportedValues = descriptor?.type === "enum" && Array.isArray(descriptor.values)
+    ? descriptor.values
+    : ["1K", "2K", "4K"];
+  if (!supportedValues.includes("4K")) return "";
+  const configured = currentOverride || envString("OPENROUTER_IMAGE_RESOLUTION", DEFAULTS.openrouterImageResolution);
+  return configured === "4K" ? "" : "4K";
 }
 
 function parseAspectRatio(value) {
@@ -204,7 +215,7 @@ function providerPreferences() {
   return Object.keys(provider).length ? provider : undefined;
 }
 
-function buildRequestBody({ model, prompt, referenceDataUrls, n, capabilities, sourceAspectRatio }) {
+function buildRequestBody({ model, prompt, referenceDataUrls, n, capabilities, sourceAspectRatio, resolutionOverride = "" }) {
   const body = {
     model,
     prompt
@@ -222,7 +233,13 @@ function buildRequestBody({ model, prompt, referenceDataUrls, n, capabilities, s
   if (outputFormat) body.output_format = outputFormat;
   const quality = supportedEnvValue(capabilities, "quality", "OPENROUTER_IMAGE_QUALITY", DEFAULTS.openrouterImageQuality);
   if (quality) body.quality = quality;
-  const resolution = supportedEnvValue(capabilities, "resolution", "OPENROUTER_IMAGE_RESOLUTION", DEFAULTS.openrouterImageResolution);
+  const resolution = supportedEnvValue(
+    capabilities,
+    "resolution",
+    "OPENROUTER_IMAGE_RESOLUTION",
+    DEFAULTS.openrouterImageResolution,
+    resolutionOverride
+  );
   if (resolution) body.resolution = resolution;
   const aspectRatio = resolveAspectRatio(capabilities, sourceAspectRatio);
   if (aspectRatio) body.aspect_ratio = aspectRatio;
@@ -308,7 +325,7 @@ async function parseStreamingImageResponse(response) {
   };
 }
 
-async function callOpenRouter({ apiKey, model, prompt, referenceDataUrls, n, capabilities, sourceAspectRatio, abortSignal }) {
+async function callOpenRouter({ apiKey, model, prompt, referenceDataUrls, n, capabilities, sourceAspectRatio, abortSignal, resolutionOverride = "" }) {
   throwIfAborted(abortSignal);
   const timeoutMs = envInt("OPENROUTER_TIMEOUT_MS", DEFAULTS.openrouterTimeoutMs, 5_000, 600_000);
   const controller = new AbortController();
@@ -316,7 +333,7 @@ async function callOpenRouter({ apiKey, model, prompt, referenceDataUrls, n, cap
   const onAbort = () => controller.abort();
   abortSignal?.addEventListener("abort", onAbort, { once: true });
   let response;
-  const requestBody = buildRequestBody({ model, prompt, referenceDataUrls, n, capabilities, sourceAspectRatio });
+  const requestBody = buildRequestBody({ model, prompt, referenceDataUrls, n, capabilities, sourceAspectRatio, resolutionOverride });
   try {
     response = await fetch(OPENROUTER_IMAGES_URL, {
       method: "POST",
@@ -380,6 +397,13 @@ async function callOpenRouterWithRetry(args) {
       return await callOpenRouter(args);
     } catch (error) {
       lastError = error;
+      const sizeTooSmall = error.status === 400 && /image size must be at least/i.test(error.message || "");
+      const resolutionOverride = sizeTooSmall
+        ? resolutionFallbackForSizeError(args.capabilities, args.resolutionOverride)
+        : "";
+      if (resolutionOverride) {
+        return callOpenRouter({ ...args, resolutionOverride });
+      }
       if (attempt >= attempts || !transientStatuses.has(error.status)) break;
       await new Promise((resolve, reject) => {
         const timeout = setTimeout(resolve, retryDelayMs(attempt));
@@ -484,7 +508,7 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
   const referenceDataUrl = await fileToDataUrl(upload.path, upload.mimetype);
   const maskWidth = Math.max(1, Math.round(Number(zone.imageWidth) || 1280));
   const maskHeight = Math.max(1, Math.round(Number(zone.imageHeight) || 820));
-  const maskBuffer = createZoneMaskPng(zone, maskWidth, maskHeight);
+  const maskBuffer = createZoneMaskPng(zone, maskWidth, maskHeight, params.shape);
   const maskDataUrl = `data:image/png;base64,${maskBuffer.toString("base64")}`;
   const maskFilename = `${requestId}-zone-mask.png`;
   await fs.writeFile(path.join(outputDir, maskFilename), maskBuffer);

@@ -11,6 +11,7 @@ import { DEFAULTS, envInt, generationMode } from "./config.js";
 import { generateMockImages } from "./mock-generator.js";
 import { readImageDimensions } from "./image-metadata.js";
 import { generateWithOpenRouter } from "./openrouter.js";
+import { defaultPlacementZone, suggestPlacementZone } from "./placement.js";
 import { buildRegenerationFeedback, validateGeneratedImages } from "./validator.js";
 
 dotenv.config();
@@ -27,6 +28,7 @@ const allowedShapes = new Set(["rectangular", "oval", "freeform"]);
 const allowedStyles = new Set(["modern", "premium", "family", "natural", "evening"]);
 const maxImagePixels = envInt("MAX_UPLOAD_IMAGE_PIXELS", DEFAULTS.maxUploadImagePixels, 1, 80_000_000);
 const requestHistoryLimit = envInt("REQUEST_HISTORY_LIMIT", DEFAULTS.requestHistoryLimit, 1, 500);
+const maxVariantCount = envInt("MAX_VARIANT_COUNT", DEFAULTS.maxVariantCount, 1, 100);
 const taskWorkerConcurrency = envInt("TASK_WORKER_CONCURRENCY", DEFAULTS.taskWorkerConcurrency, 1, 5);
 const taskRetryAttempts = envInt("TASK_RETRY_ATTEMPTS", DEFAULTS.taskRetryAttempts, 1, 4);
 const taskRetryBaseMs = envInt("TASK_RETRY_BASE_MS", DEFAULTS.taskRetryBaseMs, 250, 60_000);
@@ -114,8 +116,8 @@ function safeText(value, fallback, maxLength = 120) {
 
 function parseVariantCount(value) {
   const variants = Number(value || 3);
-  if (!Number.isInteger(variants) || variants < 3 || variants > 5) {
-    throw createBadRequest("Количество вариантов должно быть от 3 до 5.");
+  if (!Number.isInteger(variants) || variants < 1 || variants > maxVariantCount) {
+    throw createBadRequest(`Количество вариантов должно быть от 1 до ${maxVariantCount}.`);
   }
   return variants;
 }
@@ -165,8 +167,8 @@ function validateGenerationInput(params, zone, variants) {
   if (!zone || typeof zone !== "object" || Array.isArray(zone)) {
     throw createBadRequest("Выделите зону бассейна.");
   }
-  if (!Number.isFinite(variants) || variants < 3 || variants > 5) {
-    throw createBadRequest("Количество вариантов должно быть от 3 до 5.");
+  if (!Number.isFinite(variants) || variants < 1 || variants > maxVariantCount) {
+    throw createBadRequest(`Количество вариантов должно быть от 1 до ${maxVariantCount}.`);
   }
 
   const lengthM = numberFromUser(params.lengthM);
@@ -652,9 +654,43 @@ app.get("/api/config", (_req, res) => {
     hasOpenRouterKey: Boolean(process.env.OPENROUTER_API_KEY),
     model: process.env.OPENROUTER_IMAGE_MODEL || DEFAULTS.openrouterImageModel,
     taskWorkerConcurrency,
+    placementModel: process.env.OPENROUTER_PLACEMENT_MODEL || DEFAULTS.openrouterPlacementModel,
     validationModel: process.env.OPENROUTER_VALIDATION_MODEL || DEFAULTS.openrouterValidationModel,
     validationMode: process.env.OPENROUTER_VALIDATION_MODE || DEFAULTS.openrouterValidationMode
   });
+});
+
+app.post("/api/suggest-zone", async (req, res, next) => {
+  try {
+    await runUpload(req, res);
+    if (!req.file) {
+      res.status(400).json({ error: "Загрузите фото участка." });
+      return;
+    }
+
+    const params = parseJsonField(req.body.params, {}, "params");
+    const rawZone = parseJsonField(req.body.zone, null, "zone");
+    const imageSize = await readImageDimensions(req.file.path);
+    const normalizedParams = normalizeGenerationParams(params);
+    const currentZone = rawZone
+      ? normalizeZone(rawZone, imageSize)
+      : defaultPlacementZone(imageSize, normalizedParams);
+
+    validateGenerationInput(normalizedParams, currentZone, 3);
+    const suggestion = await suggestPlacementZone({
+      filePath: req.file.path,
+      mimeType: req.file.mimetype,
+      imageSize,
+      params: normalizedParams,
+      currentZone
+    });
+
+    res.json(suggestion);
+  } catch (error) {
+    next(error);
+  } finally {
+    await removeUploadedFile(req.file);
+  }
 });
 
 app.get("/api/tasks", async (req, res, next) => {

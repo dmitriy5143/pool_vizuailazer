@@ -564,15 +564,33 @@ label span {
 
 .calibration-tools {
   display: grid;
-  grid-template-columns: auto minmax(110px, 150px) auto auto;
+  grid-template-columns: minmax(190px, 1fr) minmax(105px, 140px) auto;
   gap: 10px;
-  align-items: end;
+  align-items: center;
   margin-bottom: 14px;
   padding: 12px;
   border: 1px solid #d9e6eb;
   border-radius: 8px;
   background: #fbfdfd;
   box-shadow: var(--shadow-sm);
+}
+
+.scale-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.scale-copy strong {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 860;
+}
+
+.scale-copy span {
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.32;
 }
 
 .segmented-control {
@@ -594,7 +612,7 @@ label span {
 }
 
 .segmented-control button {
-  min-width: 92px;
+  min-width: 82px;
   height: 42px;
   padding: 0 12px;
 }
@@ -615,24 +633,6 @@ label span {
   font-weight: 780;
 }
 
-.calibration-status {
-  display: inline-flex;
-  align-items: center;
-  min-height: 42px;
-  padding: 0 10px;
-  border: 1px solid #d7e6e2;
-  border-radius: 7px;
-  background: var(--teal-soft);
-  color: #285b55;
-  font-size: 12px;
-  font-weight: 820;
-}
-
-.calibration-status.ready {
-  border-color: #a9d9d0;
-  color: var(--teal);
-}
-
 .icon-text-button {
   display: inline-flex;
   align-items: center;
@@ -648,6 +648,12 @@ label span {
 .icon-text-button:hover {
   color: var(--teal);
   border-color: #9dccd0;
+}
+
+.icon-text-button.active {
+  border-color: #7fbfc5;
+  background: var(--teal-soft);
+  color: var(--teal);
 }
 
 .image-stage {
@@ -713,6 +719,7 @@ label span {
   place-items: center;
   isolation: isolate;
   border: 0;
+  border-radius: 8px;
   outline: 2px solid rgb(255 255 255 / 90%);
   background:
     linear-gradient(135deg, rgb(14 165 233 / 12%) 0, rgb(20 184 166 / 10%) 100%);
@@ -722,11 +729,20 @@ label span {
   pointer-events: none;
 }
 
+.selection.shape-oval {
+  border-radius: 999px / 50%;
+}
+
+.selection.shape-freeform {
+  border-radius: 42% 58% 46% 54% / 54% 42% 58% 46%;
+}
+
 .selection::before {
   position: absolute;
   z-index: 0;
   inset: 0;
   border: 1px dashed rgb(255 255 255 / 62%);
+  border-radius: inherit;
   background:
     linear-gradient(135deg, rgb(255 255 255 / 8%) 0, transparent 46%),
     linear-gradient(180deg, rgb(14 165 233 / 8%) 0, rgb(15 118 110 / 3%) 100%);
@@ -738,6 +754,7 @@ label span {
   z-index: 0;
   inset: 0;
   border: 2px solid rgb(14 165 233 / 82%);
+  border-radius: inherit;
   background:
     repeating-linear-gradient(90deg, rgb(255 255 255 / 11%) 0 1px, transparent 1px 14px),
     repeating-linear-gradient(180deg, rgb(255 255 255 / 11%) 0 1px, transparent 1px 14px);
@@ -793,6 +810,9 @@ label span {
   position: absolute;
   z-index: 7;
   inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
   overflow: visible;
   pointer-events: none;
 }
@@ -960,6 +980,15 @@ label span {
   font-weight: 680;
 }
 
+.placement-summary {
+  padding: 9px 10px;
+  border: 1px solid #c9e4e8;
+  border-radius: 7px;
+  background: #f4fbfb;
+  color: #235d66;
+  line-height: 1.35;
+}
+
 .soft-warning,
 .error {
   margin-top: 12px;
@@ -1029,6 +1058,7 @@ textarea:focus {
 }
 
 .generate-button,
+.suggest-button,
 .secondary-action,
 .result-actions button,
 .variant-toolbar button {
@@ -1058,6 +1088,33 @@ textarea:focus {
 }
 
 .generate-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.placement-action {
+  display: grid;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #d3e4ea;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f9fdfd 0, #f0f8f8 100%);
+}
+
+.suggest-button {
+  min-height: 46px;
+  border: 1px solid #9dccd0;
+  background: #ffffff;
+  color: var(--teal);
+  box-shadow: var(--shadow-sm);
+}
+
+.suggest-button:hover:not(:disabled) {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+}
+
+.suggest-button:disabled {
   cursor: not-allowed;
   opacity: 0.58;
 }
@@ -1776,6 +1833,10 @@ figcaption span {
 
   .calibration-tools {
     grid-template-columns: 1fr;
+  }
+
+  .scale-copy {
+    text-align: left;
   }
 
   .segmented-control,

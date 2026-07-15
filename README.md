@@ -93,7 +93,15 @@ OPENROUTER_API_KEY=sk-or-...
 OPENROUTER_IMAGE_MODEL=another/image-model
 ```
 
+VLM-уточнение контура запускается отдельной кнопкой до генерации вариантов. По умолчанию используется `OPENROUTER_PLACEMENT_MODEL=google/gemini-2.5-flash`; клиент передает уменьшенную копию фото, а backend ожидает только JSON с координатами контура. Если нужно временно отключить VLM-разметку:
+
+```env
+OPENROUTER_PLACEMENT_MODE=off
+```
+
 Важно: для нашей задачи модель должна поддерживать image-to-image / reference image. OpenRouter Image API принимает `input_references`, но поддержка inpainting/mask зависит от конкретной модели и endpoint. Поэтому модель нужно проверять на тестовом наборе фото.
+
+Дефолтное разрешение для реальной генерации: `OPENROUTER_IMAGE_RESOLUTION=4K`. Для `bytedance-seed/seedream-4.5` это надежнее на 4:3 и широких фото: `2K` может давать меньше минимального размера изображения у провайдера. Если в `.env` вручную стоит `1K` или `2K` и провайдер вернет ошибку минимального размера, адаптер один раз повторит запрос с `4K`.
 
 По умолчанию реальные варианты генерируются параллельно, без необходимости добавлять эти значения в `.env`:
 
@@ -101,6 +109,7 @@ OPENROUTER_IMAGE_MODEL=another/image-model
 OPENROUTER_VARIANT_STRATEGY=parallel
 OPENROUTER_SINGLE_IMAGE_CONCURRENCY=3
 OPENROUTER_TIMEOUT_MS=180000
+MAX_VARIANT_COUNT=20
 ```
 
 `parallel` делает отдельные асинхронные `n=1` вызовы с разными prompt-направлениями для вариантов A/B/C. Это быстрее и надежнее для моделей, которые не поддерживают `n > 1`. Если нужна одна batch-заявка, можно поставить `OPENROUTER_VARIANT_STRATEGY=batch`; при ошибке `n > 1` приложение вернется к параллельным single-image вызовам.

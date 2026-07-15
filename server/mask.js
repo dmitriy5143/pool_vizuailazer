@@ -33,18 +33,45 @@ function pngChunk(type, data) {
   return Buffer.concat([lengthBuffer, typeBuffer, data, crcBuffer]);
 }
 
-export function createZoneMaskPng(zone, width = 1280, height = 820) {
+function maskContainsPoint(shape, x, y, x0, y0, x1, y1) {
+  if (x < x0 || x >= x1 || y < y0 || y >= y1) return false;
+  if (shape === "oval") {
+    const cx = (x0 + x1) / 2;
+    const cy = (y0 + y1) / 2;
+    const rx = Math.max(1, (x1 - x0) / 2);
+    const ry = Math.max(1, (y1 - y0) / 2);
+    const dx = (x + 0.5 - cx) / rx;
+    const dy = (y + 0.5 - cy) / ry;
+    return dx * dx + dy * dy <= 1;
+  }
+  if (shape === "freeform") {
+    const cx = (x0 + x1) / 2;
+    const cy = (y0 + y1) / 2;
+    const rx = Math.max(1, (x1 - x0) / 2);
+    const ry = Math.max(1, (y1 - y0) / 2);
+    const dx = (x + 0.5 - cx) / rx;
+    const dy = (y + 0.5 - cy) / ry;
+    const angle = Math.atan2(dy, dx);
+    const radius = Math.hypot(dx, dy);
+    const boundary = 0.92 + 0.08 * Math.sin(3 * angle + 0.7) + 0.04 * Math.cos(5 * angle);
+    return radius <= boundary;
+  }
+  return true;
+}
+
+export function createZoneMaskPng(zone, width = 1280, height = 820, shape = "rectangular") {
   const raw = Buffer.alloc((width + 1) * height);
   const x0 = Math.max(0, Math.round((zone.xPct ?? 0) * width));
   const y0 = Math.max(0, Math.round((zone.yPct ?? 0) * height));
   const x1 = Math.min(width, Math.round(((zone.xPct ?? 0) + (zone.widthPct ?? 0)) * width));
   const y1 = Math.min(height, Math.round(((zone.yPct ?? 0) + (zone.heightPct ?? 0)) * height));
+  const maskShape = ["oval", "freeform"].includes(shape) ? shape : "rectangular";
 
   for (let y = 0; y < height; y += 1) {
     const rowStart = y * (width + 1);
     raw[rowStart] = 0;
     for (let x = 0; x < width; x += 1) {
-      raw[rowStart + 1 + x] = x >= x0 && x < x1 && y >= y0 && y < y1 ? 255 : 0;
+      raw[rowStart + 1 + x] = maskContainsPoint(maskShape, x, y, x0, y0, x1, y1) ? 255 : 0;
     }
   }
 
