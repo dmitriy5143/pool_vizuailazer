@@ -57,8 +57,9 @@ function lightingText(params) {
   if (params.lighting === "night") {
     return [
       "Requested lighting mode: realistic blue-hour / night presentation.",
-      "Relight the whole photo consistently while preserving every structure, object, boundary, camera position, and pool placement.",
-      "Use restrained underwater pool lighting and believable architectural ambient light. Do not add decorative lamps, glowing objects, people, furniture, stars, or fantasy illumination."
+      "Treat this as a coherent relighting edit, not a redesign. Preserve every structure, boundary, camera position, pool placement, and the selected shell geometry.",
+      "Keep the official pool steps, ledges, clipped corners, coating, and proportions clearly visible despite the darker exposure.",
+      "Use restrained underwater lighting and believable architectural or path lighting. A few plausible fixtures are allowed when naturally integrated, but do not add people, furniture, fantasy illumination, or decorative clutter."
     ].join(" ");
   }
   return "Requested lighting mode: day. Preserve the source photo's natural time of day, exposure, shadows, and lighting direction.";

@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { classifyOutsideMaskMetric, summarizeValidation } from "../server/validator.js";
+import {
+  classifyOutsideMaskMetric,
+  shouldUseOutsideMaskPixelGuard,
+  summarizeValidation
+} from "../server/validator.js";
 
 function metric(overrides = {}) {
   return {
@@ -32,6 +36,11 @@ test("borderline mask-edge change is sent to review", () => {
 
 test("small changes outside the mask do not block a result", () => {
   assert.equal(classifyOutsideMaskMetric(metric()), null);
+});
+
+test("night relighting bypasses the daytime pixel-difference guard", () => {
+  assert.equal(shouldUseOutsideMaskPixelGuard("night"), false);
+  assert.equal(shouldUseOutsideMaskPixelGuard("day"), true);
 });
 
 test("a task passes when at least one variant is safe to show", () => {

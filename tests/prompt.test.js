@@ -52,6 +52,8 @@ test("night prompt permits relighting but forbids structural changes", () => {
   });
 
   assert.match(prompt, /realistic blue-hour \/ night presentation/);
+  assert.match(prompt, /A few plausible fixtures are allowed/);
+  assert.match(prompt, /Keep the official pool steps, ledges, clipped corners/);
   assert.match(prompt, /only coherent exposure, color temperature, and illumination may change/);
   assert.match(prompt, /Preserve the existing house, fence, trees/);
 });

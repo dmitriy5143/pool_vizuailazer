@@ -332,6 +332,7 @@ async function localImageGuard({ image, dataDir, originalPath, maskUrl, lighting
 }
 
 async function buildLocalGuards({ images, dataDir, originalPath, maskUrl, lighting, abortSignal }) {
+  if (!shouldUseOutsideMaskPixelGuard(lighting)) return {};
   const entries = [];
   for (const image of images) {
     throwIfAborted(abortSignal);
@@ -339,6 +340,10 @@ async function buildLocalGuards({ images, dataDir, originalPath, maskUrl, lighti
     if (guard) entries.push([image.id, guard]);
   }
   return Object.fromEntries(entries);
+}
+
+export function shouldUseOutsideMaskPixelGuard(lighting) {
+  return lighting !== "night";
 }
 
 function applyLocalGuards(autoRatings, guards) {
@@ -410,7 +415,9 @@ function validationPrompt({ params, zone, images }) {
     "sendable must be true only when every score is at least 4, the pool is inside the mask/zone, and the original yard is preserved.",
     "action must be one of: show, review, hide.",
     "Use action=show when preservation>=4, zone>=4, realism>=4, params>=4, artifacts>=4, and the image is acceptable for manager review.",
-    "Use action=review for borderline variants, minor scene changes, imperfect materials, small realism issues, added unrequested furniture/lights/decor, any score 3, or low confidence.",
+    nightMode
+      ? "Use action=review for borderline variants, minor structural changes, imperfect materials, small realism issues, excessive or implausible lighting, added furniture/decor, any score 3, or low confidence. Plausible coherent wall, path, and pool lights are allowed."
+      : "Use action=review for borderline variants, minor scene changes, imperfect materials, small realism issues, added unrequested furniture/lights/decor, any score 3, or low confidence.",
     nightMode
       ? "Use action=hide only for clear severe hallucinations: pool on fence/house/wall, mostly outside zone, broken perspective, changed building/fence/house/trees/objects, full-scene redesign beyond lighting, labels/text, impossible geometry, or major artifacts."
       : "Use action=hide only for clear severe hallucinations: pool on fence/house/wall, mostly outside zone, broken perspective, changed building/fence/house/trees, full-scene redesign, changed color mode, labels/text, impossible geometry, or major artifacts.",
