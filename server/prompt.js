@@ -9,12 +9,19 @@ const STYLE_DESCRIPTIONS = {
 };
 
 const VARIANT_DIRECTIONS = [
-  "View A: original-camera baseline sales view of the same pool concept, with the least possible change outside the selected zone.",
-  "View B: slightly left-oblique virtual sales angle of the same pool concept, as if the viewer moved a few steps left; keep the same model, footprint, materials, yard identity, and placement.",
-  "View C: slightly right-oblique virtual sales angle of the same pool concept, as if the viewer moved a few steps right; keep the same model, footprint, materials, yard identity, and placement.",
-  "View D: slightly higher presentation angle of the same pool concept, useful for seeing the basin proportions; keep the same model, footprint, materials, yard identity, and placement.",
-  "View E: slightly closer near-edge presentation of the same pool concept, useful for water/coping detail; keep the same model, footprint, materials, yard identity, and placement."
+  "Candidate A: produce the safest faithful realization of the fixed proposal from the exact original camera.",
+  "Candidate B: produce an independent photorealistic realization of the same fixed proposal from the exact original camera; do not redesign or move anything.",
+  "Candidate C: produce another independent photorealistic realization of the same fixed proposal from the exact original camera; do not redesign or move anything.",
+  "Candidate D: keep the exact original camera and fixed proposal; vary only subtle water, reflection, and material rendering quality.",
+  "Candidate E: keep the exact original camera and fixed proposal; vary only subtle water, reflection, and material rendering quality."
 ];
+
+const REFERENCE_DESCRIPTIONS = {
+  original: "the original user photo and the primary authority for the property, camera, perspective, objects, and composition",
+  overlay: "the original photo with a cyan/white placement overlay; this is the strongest visible placement guide",
+  mask: "a black-and-white binary placement mask; white is the intended pool footprint/editable placement area and black must be preserved",
+  "product-diagram": "the official customer-site isolated top-view reference for the selected River Pools line; this is the strongest authority for shell outline, steps, ledges, internal geometry, and line identity, but its surrounding tiles and background color are not design instructions"
+};
 
 function feedbackText(feedback) {
   const text = String(feedback || "").trim();
@@ -36,7 +43,28 @@ function productText(params) {
   ].join(" ");
 }
 
-export function buildPrompt({ params, zone, variantIndex = null, feedback = "", referenceMode = "overlay-mask" }) {
+function referenceText(referenceRoles) {
+  return referenceRoles
+    .map((role, index) => {
+      const description = REFERENCE_DESCRIPTIONS[role];
+      return description ? `Reference image #${index + 1} is ${description}.` : "";
+    })
+    .filter(Boolean)
+    .join(" ");
+}
+
+function lightingText(params) {
+  if (params.lighting === "night") {
+    return [
+      "Requested lighting mode: realistic blue-hour / night presentation.",
+      "Relight the whole photo consistently while preserving every structure, object, boundary, camera position, and pool placement.",
+      "Use restrained underwater pool lighting and believable architectural ambient light. Do not add decorative lamps, glowing objects, people, furniture, stars, or fantasy illumination."
+    ].join(" ");
+  }
+  return "Requested lighting mode: day. Preserve the source photo's natural time of day, exposure, shadows, and lighting direction.";
+}
+
+export function buildPrompt({ params, zone, variantIndex = null, feedback = "", referenceRoles = ["original", "overlay", "mask"] }) {
   const styleKey = params.style || "modern";
   const styleDescription = STYLE_DESCRIPTIONS[styleKey] || STYLE_DESCRIPTIONS.modern;
   const zoneText = zone
@@ -46,58 +74,39 @@ export function buildPrompt({ params, zone, variantIndex = null, feedback = "", 
     variantIndex === null
       ? "Create several views of the same realistic pool concept, not different design concepts."
       : VARIANT_DIRECTIONS[variantIndex % VARIANT_DIRECTIONS.length];
-  const referenceText = zone
-    ? {
-        "overlay-mask-product": [
-          "Reference image #1 is the original photo.",
-          "Reference image #2 is the same photo with a cyan/white placement overlay drawn directly on the intended pool footprint. This overlay is the strongest placement guide.",
-          "Reference image #3 is a black-and-white binary placement mask: white marks the intended pool footprint / editable area for the requested shape, black marks the area to preserve.",
-          "Reference image #4 is the customer website product reference photo for the selected River Pools line. Use it only for pool shell type, basin proportions, water/finish feel, coping style, and line-specific features."
-        ].join(" "),
-        "overlay-product": [
-          "Reference image #1 is the original photo.",
-          "Reference image #2 is the same photo with a cyan/white placement overlay drawn directly on the intended pool footprint. This overlay is the strongest placement guide.",
-          "Reference image #3 is the customer website product reference photo for the selected River Pools line. Use it only for pool shell type, basin proportions, water/finish feel, coping style, and line-specific features."
-        ].join(" "),
-        "overlay-mask": [
-          "Reference image #1 is the original photo.",
-          "Reference image #2 is the same photo with a cyan/white placement overlay drawn directly on the intended pool footprint. This overlay is the strongest placement guide.",
-          "Reference image #3 is a black-and-white binary placement mask: white marks the intended pool footprint / editable area for the requested shape, black marks the area to preserve."
-        ].join(" "),
-        overlay: [
-          "Reference image #1 is the original photo.",
-          "Reference image #2 is the same photo with a cyan/white placement overlay drawn directly on the intended pool footprint. This overlay is the strongest placement guide."
-        ].join(" "),
-        mask: "Reference image #1 is the original photo. Reference image #2 is a black-and-white placement mask, not a design reference: white marks the exact intended pool footprint / editable placement area for the requested shape, black marks the area to preserve."
-      }[referenceMode] || ""
-    : "";
+  const references = zone ? referenceText(referenceRoles) : "";
+  const hasProductReference = referenceRoles.includes("product-diagram");
+  const nightMode = params.lighting === "night";
 
   return [
     "Task: photorealistic image editing of the provided real backyard / land plot photo.",
     "Output one finished marketing visualization image only. Do not add labels, text, arrows, UI overlays, before/after split, or blueprint elements.",
     "Hard requirement: edit the original photo, do not create a new imagined backyard.",
-    "Do not crop, rotate, zoom, reframe, colorize, or upscale into a different composition unless the per-variant view instruction explicitly asks for a controlled virtual sales angle. Even then, preserve the same property identity, same pool footprint, same placement relationship to the house/fence/lawn, and the original aspect ratio.",
+    "Do not crop, rotate, zoom, reframe, or change the camera. Preserve the same property identity, pool footprint, placement relationship to the house/fence/lawn, and original aspect ratio.",
     "Add an outdoor swimming pool only inside the selected zone.",
     zoneText,
-    referenceText,
+    references,
     "Use the original photo as the primary reference. Use the overlay, mask, and coordinates as the user's intended visible pool footprint and placement area; do not treat them as a loose suggestion. Do not draw the cyan tint, white border, mask, guide colors, labels, or UI overlays into the output.",
-    referenceMode.includes("product") ? "Use the product reference photo only for the selected pool line and bowl type. Do not copy its background house, garden, patio, furniture, lighting, people, or camera composition into the user's yard." : "",
+    hasProductReference ? "The official product references describe one fixed shell. Scale that shell to the selected catalog dimensions without changing its normalized contour, steps, ledges, or defining features. Do not copy reference backgrounds into the user's yard." : "",
     `Pool dimensions requested: ${params.lengthM || "not specified"}m x ${params.widthM || "not specified"}m.`,
     productText(params),
     `Pool shape: ${params.shape || "rectangular"}.`,
     `Design style: ${styleDescription}.`,
+    lightingText(params),
     `Materials and surroundings: ${params.materials || "matching realistic outdoor materials"}.`,
     params.notes ? `Client notes: ${params.notes}.` : "",
     feedbackText(feedback),
     "All generated variants must represent the same proposal: same selected catalog model, same shape, same dimensions, same coating, same coping/deck material logic, same placement, and same landscape decisions. Do not make one variant minimal, another premium, another family, or another natural.",
-    "Different views mean controlled sales-view angles of the same proposal, not different designs. If a requested angle would require inventing a different backyard or moving the pool away from the selected zone, keep the original camera and only vary water, shadow, and near-edge presentation details.",
+    "All candidates use the exact same original camera. They are alternative render attempts for selection, not different angles and not different designs.",
     variantText,
     "Estimate the ground plane and perspective from the photo. Align the pool edges, coping, deck, shadows, reflections, and scale with that perspective.",
-    "The selected zone is a hard boundary for the edit. The pool, coping, deck, water, shadows, and replacement ground must remain inside the overlay/mask/zone unless the user explicitly selected the adjacent ground surface.",
+    "The selected zone is a hard boundary for pool geometry. The pool, coping, deck, water, pool shadows, and replacement ground must remain inside the overlay/mask/zone unless the user explicitly selected the adjacent ground surface.",
     "The visible pool footprint should sit on the ground plane inside the selected zone, with realistic perspective margins. Do not use a vertical fence, wall, house facade, roof, tree trunk, or distant background as pool surface.",
     "Keep a realistic visual buffer from fences, house walls, retaining walls, and large trees. Never place the pool on, through, behind, hanging from, or attached to a fence or house.",
     "Inside the selected zone, replace ground, minor movable objects, or vegetation only when needed to place the pool cleanly.",
-    "Preserve the existing house, fence, trees, lighting direction, lens feel, weather, color mode, and everything outside the selected zone. For controlled alternate views, preserve recognizable property identity and relative object placement instead of inventing new surroundings.",
+    nightMode
+      ? "Outside the selected zone, only coherent exposure, color temperature, and illumination may change for night mode. Preserve the existing house, fence, trees, lens, weather, geometry, and every object's exact position."
+      : "Preserve the existing house, fence, trees, lighting direction, lens feel, weather, color mode, and everything outside the selected zone.",
     "Do not add unrequested people, furniture, umbrellas, lounge chairs, lamps, fire pits, extra patios, fantasy landscaping, new buildings, or decorative objects.",
     "If the source photo is black-and-white or low resolution, preserve that visual character instead of turning it into a polished new scene.",
     "The result must look like a realistic sales concept visualization, not a blueprint, not a CAD drawing, not a fantasy render.",
@@ -108,5 +117,5 @@ export function buildPrompt({ params, zone, variantIndex = null, feedback = "", 
 }
 
 export function getVariantTitle(index) {
-  return ["Исходный ракурс", "Ракурс левее", "Ракурс правее", "Выше", "Ближе"][index] || `Ракурс ${index + 1}`;
+  return ["Основной", "Альтернатива 1", "Альтернатива 2", "Альтернатива 3", "Альтернатива 4"][index] || `Вариант ${index + 1}`;
 }

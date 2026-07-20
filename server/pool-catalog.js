@@ -1,56 +1,100 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import poolProductsData from "../shared/pool-products.json" with { type: "json" };
+
 const referenceByLine = {
   Luxor: {
-    filename: "luxor.webp",
-    sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-luxor-hero.webp",
-    mimeType: "image/webp"
+    hero: {
+      filename: "luxor.webp",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-luxor-hero.webp",
+      mimeType: "image/webp"
+    },
+    diagram: {
+      filename: "luxor-diagram.png",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-luxor.png",
+      mimeType: "image/png"
+    }
   },
   Minipool: {
-    filename: "minipool.webp",
-    sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-minipool-hero.webp",
-    mimeType: "image/webp"
+    hero: {
+      filename: "minipool.webp",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-minipool-hero.webp",
+      mimeType: "image/webp"
+    },
+    diagram: {
+      filename: "minipool-diagram.png",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-minipool.png",
+      mimeType: "image/png"
+    }
   },
   Classic: {
-    filename: "classic.webp",
-    sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-classic-hero.webp",
-    mimeType: "image/webp"
+    hero: {
+      filename: "classic.webp",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-classic-hero.webp",
+      mimeType: "image/webp"
+    },
+    diagram: {
+      filename: "classic-diagram.png",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-classic.png",
+      mimeType: "image/png"
+    }
   },
   Rio: {
-    filename: "rio.webp",
-    sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-rio-hero.webp",
-    mimeType: "image/webp"
+    hero: {
+      filename: "rio.webp",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-rio-hero.webp",
+      mimeType: "image/webp"
+    },
+    diagram: {
+      filename: "rio-diagram.png",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-rio.png",
+      mimeType: "image/png"
+    }
   },
   Quick: {
-    filename: "quick.webp",
-    sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-quick-hero.webp",
-    mimeType: "image/webp"
+    hero: {
+      filename: "quick.webp",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-quick-hero.webp",
+      mimeType: "image/webp"
+    },
+    diagram: {
+      filename: "quick-diagram.png",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-quick.png",
+      mimeType: "image/png"
+    }
   },
   Spa: {
-    filename: "spa.webp",
-    sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-spa-hero.webp",
-    mimeType: "image/webp"
+    hero: {
+      filename: "spa.webp",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-spa-hero.webp",
+      mimeType: "image/webp"
+    },
+    diagram: {
+      filename: "spa-diagram.png",
+      sourceUrl: "https://lp2.river-pools.ru/lp2/images/pool-spa.png",
+      mimeType: "image/png"
+    }
   }
 };
 
 const lineTraits = {
   Luxor: {
     summary: "rectangular composite pool line with clean straight walls and a premium minimal look",
-    geometry: "long rectangular basin, straight parallel sides, crisp square corners, integrated entry steps at one short end",
-    feature: "wide internal entry steps",
+    geometry: "long rectangular basin with straight parallel sides, clipped inner corners, and mirrored entry steps at one short end",
+    feature: "two symmetrical stair flights integrated into one short end",
     diagram: "steps"
   },
   Minipool: {
     summary: "compact rectangular composite pools for small yards",
-    geometry: "compact rectangular basin with simple proportions and practical entry steps",
-    feature: "compact entry steps",
+    geometry: "compact rectangular basin with an asymmetric shallow ledge and corner entry steps at one short end",
+    feature: "corner steps plus compact shallow ledge",
     diagram: "corner-steps"
   },
   Classic: {
     summary: "classic rectangular composite pool",
-    geometry: "balanced rectangular basin, traditional straight geometry, centered entry steps at one short end",
-    feature: "classic centered steps",
+    geometry: "balanced rectangular basin with straight geometry and full-width entry steps across one short end",
+    feature: "full-width staircase at one short end",
     diagram: "center-steps"
   },
   Rio: {
@@ -61,39 +105,20 @@ const lineTraits = {
   },
   Quick: {
     summary: "narrow lap-pool line for active swimming",
-    geometry: "long narrow rectangular lap-pool proportions, clean swim lane feel, minimal internal features",
-    feature: "narrow lap-pool geometry",
+    geometry: "long narrow rectangular lap-pool proportions with compact corner entry steps at one short end",
+    feature: "narrow swim lane and corner steps",
     diagram: "lap"
   },
   Spa: {
     summary: "compact SPA composite bowl for relaxation and hydromassage",
-    geometry: "compact rectangular spa basin with bench-like internal seating and small hydromassage details",
-    feature: "spa bench seating",
+    geometry: "compact asymmetric spa basin with an angled inner contour, entry steps, and bench-like internal seating",
+    feature: "asymmetric spa seating and steps",
     diagram: "spa"
   }
 };
 
-export const poolProducts = [
-  { id: "luxor-6536", line: "Luxor", model: "LUXOR 6536", lengthM: "6.5", widthM: "3.6", depthM: "1.1-1.7" },
-  { id: "luxor-7537", line: "Luxor", model: "LUXOR 7537", lengthM: "7.5", widthM: "3.7", depthM: "1.1-1.7" },
-  { id: "luxor-8537", line: "Luxor", model: "LUXOR 8537", lengthM: "8.5", widthM: "3.7", depthM: "1.1-1.7" },
-  { id: "luxor-9537", line: "Luxor", model: "LUXOR 9537", lengthM: "9.5", widthM: "3.7", depthM: "1.1-1.7" },
-  { id: "luxor-10537", line: "Luxor", model: "LUXOR 10537", lengthM: "10.5", widthM: "3.7", depthM: "1.1-1.7" },
-  { id: "minipool-4025", line: "Minipool", model: "Minipool 4025", lengthM: "4.0", widthM: "2.5", depthM: "1.3-1.5" },
-  { id: "minipool-4530", line: "Minipool", model: "Minipool 4530", lengthM: "4.5", widthM: "3.0", depthM: "1.5" },
-  { id: "minipool-5530", line: "Minipool", model: "Minipool 5530", lengthM: "5.5", widthM: "3.0", depthM: "1.5" },
-  { id: "minipool-6330", line: "Minipool", model: "Minipool 6330", lengthM: "6.3", widthM: "3.0", depthM: "1.5" },
-  { id: "classic-8537", line: "Classic", model: "Classic 8537", lengthM: "8.5", widthM: "3.7", depthM: "1.1-1.7" },
-  { id: "rio-7737", line: "Rio", model: "RIO 7737", lengthM: "7.7", widthM: "3.7", depthM: "1.1-1.75" },
-  { id: "rio-8737", line: "Rio", model: "RIO 8737", lengthM: "8.7", widthM: "3.7", depthM: "1.2-1.8" },
-  { id: "rio-9737", line: "Rio", model: "RIO 9737", lengthM: "9.7", widthM: "3.7", depthM: "1.2-1.8" },
-  { id: "quick-5025", line: "Quick", model: "QUICK 5025", lengthM: "5.0", widthM: "2.5", depthM: "1.5" },
-  { id: "quick-6025", line: "Quick", model: "QUICK 6025", lengthM: "6.0", widthM: "2.5", depthM: "1.6" },
-  { id: "quick-7025", line: "Quick", model: "QUICK 7025", lengthM: "7.0", widthM: "2.5", depthM: "1.6" },
-  { id: "spa-4025", line: "Spa", model: "SPA 4025", lengthM: "4.0", widthM: "2.5", depthM: "1.0" }
-].map((product) => ({
+export const poolProducts = poolProductsData.map((product) => ({
   ...product,
-  shape: "rectangular",
   traits: lineTraits[product.line]
 }));
 
@@ -107,6 +132,27 @@ export function getPoolProduct(params = {}) {
   const byId = id ? poolProducts.find((product) => normalize(product.id) === id) : null;
   if (byId) return byId;
   return name ? poolProducts.find((product) => normalize(product.model) === name) || null : null;
+}
+
+export function canonicalizePoolParams(params = {}) {
+  const id = normalize(params.poolModelId);
+  if (!id) return { ...params };
+  const product = poolProducts.find((item) => normalize(item.id) === id);
+  if (!product) {
+    const error = new Error("Выбранная модель чаши отсутствует в каталоге.");
+    error.status = 400;
+    throw error;
+  }
+  return {
+    ...params,
+    poolModelId: product.id,
+    poolModelName: product.model,
+    poolModelLine: product.line,
+    lengthM: product.lengthM,
+    widthM: product.widthM,
+    depthM: product.depthM,
+    shape: product.shape
+  };
 }
 
 export function getPoolLineTraits(params = {}) {
@@ -132,6 +178,7 @@ export function productPromptDetails(params = {}) {
     line ? `line=${line}` : "",
     lengthM && widthM ? `catalog dimensions=${lengthM}m x ${widthM}m` : "",
     depthM ? `depth=${depthM}m` : "",
+    product ? "catalog dimensions and shell geometry are fixed and must not be altered" : "",
     finish ? `bowl coating=${finish}` : "",
     lineTraits?.summary ? `line meaning=${lineTraits.summary}` : "",
     lineTraits?.geometry ? `required basin geometry=${lineTraits.geometry}` : "",
@@ -141,12 +188,8 @@ export function productPromptDetails(params = {}) {
   return details.join("; ");
 }
 
-export async function productReferenceAsset(params = {}, rootDir = process.cwd()) {
-  const product = getPoolProduct(params);
-  const line = product?.line || String(params.poolModelLine || "").trim();
-  const reference = referenceByLine[line];
+async function resolveReferenceAsset(reference, rootDir) {
   if (!reference) return null;
-
   const relativePath = path.join("product-references", "river-pools", reference.filename);
   const candidates = [
     path.join(rootDir, "public", relativePath),
@@ -157,8 +200,6 @@ export async function productReferenceAsset(params = {}, rootDir = process.cwd()
       await fs.access(filePath);
       return {
         ...reference,
-        line,
-        product,
         path: filePath,
         publicUrl: `/${relativePath}`
       };
@@ -167,4 +208,17 @@ export async function productReferenceAsset(params = {}, rootDir = process.cwd()
     }
   }
   return null;
+}
+
+export async function productReferenceAssets(params = {}, rootDir = process.cwd()) {
+  const product = getPoolProduct(params);
+  const line = product?.line || String(params.poolModelLine || "").trim();
+  const references = referenceByLine[line];
+  if (!references) return null;
+  const [diagram, hero] = await Promise.all([
+    resolveReferenceAsset(references.diagram, rootDir),
+    resolveReferenceAsset(references.hero, rootDir)
+  ]);
+  if (!diagram && !hero) return null;
+  return { line, product, diagram, hero };
 }

@@ -4,7 +4,7 @@ import path from "node:path";
 import { DEFAULTS, envInt, envList, envString } from "./config.js";
 import { createZoneMaskPng } from "./mask.js";
 import { createZoneOverlayJpeg } from "./overlay.js";
-import { productReferenceAsset } from "./pool-catalog.js";
+import { productReferenceAssets } from "./pool-catalog.js";
 import { buildPrompt } from "./prompt.js";
 
 const OPENROUTER_IMAGES_URL = "https://openrouter.ai/api/v1/images";
@@ -204,6 +204,24 @@ function inputReferenceLimit(capabilities) {
   }
   if (supportsImageInput(capabilities) && (!parameters || !Object.keys(parameters).length)) return 2;
   return 0;
+}
+
+export function selectGenerationReferences({
+  referenceLimit,
+  originalUrl,
+  overlayUrl,
+  maskUrl,
+  productDiagramUrl
+}) {
+  const optionalReferences = [
+    productDiagramUrl ? { role: "product-diagram", url: productDiagramUrl } : null,
+    maskUrl ? { role: "mask", url: maskUrl } : null
+  ].filter(Boolean);
+  return [
+    { role: "original", url: originalUrl },
+    { role: "overlay", url: overlayUrl },
+    ...optionalReferences.slice(0, Math.max(0, referenceLimit - 2))
+  ];
 }
 
 function providerPreferences() {
@@ -454,11 +472,6 @@ function errorSummary(error) {
   return error?.message || "Unknown generation error.";
 }
 
-function productReferenceLabel(asset) {
-  if (!asset) return "product";
-  return String(asset.line || "product").toLowerCase().replace(/[^a-z0-9_-]+/gi, "-");
-}
-
 async function generateParallelVariants({
   apiKey,
   model,
@@ -468,7 +481,7 @@ async function generateParallelVariants({
   variants,
   capabilities,
   sourceAspectRatio,
-  referenceMode,
+  referenceRoles,
   feedback = "",
   abortSignal
 }) {
@@ -479,7 +492,7 @@ async function generateParallelVariants({
   const concurrency = envInt("OPENROUTER_SINGLE_IMAGE_CONCURRENCY", defaultConcurrency, 1, variants);
   const settled = await runWithConcurrency(indexes, concurrency, async (index) => {
     throwIfAborted(abortSignal);
-    const variantPrompt = buildPrompt({ params, zone, variantIndex: index, feedback, referenceMode });
+    const variantPrompt = buildPrompt({ params, zone, variantIndex: index, feedback, referenceRoles });
     try {
       const payload = await callOpenRouterWithRetry({
         apiKey,
@@ -527,17 +540,12 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
   const overlayFilename = `${requestId}-zone-overlay.jpg`;
   const overlayDataUrl = `data:image/jpeg;base64,${overlayBuffer.toString("base64")}`;
   await fs.writeFile(path.join(outputDir, overlayFilename), overlayBuffer);
-  const productReference = await productReferenceAsset(params);
-  let productReferenceUrl = null;
-  let productReferenceDataUrl = null;
-  if (productReference) {
-    const ext = path.extname(productReference.filename).replace(".", "") || "webp";
-    const productReferenceFilename = `${requestId}-product-${productReferenceLabel(productReference)}.${ext}`;
-    const productReferencePath = path.join(outputDir, productReferenceFilename);
-    await fs.copyFile(productReference.path, productReferencePath);
-    productReferenceUrl = `/generated/${productReferenceFilename}`;
-    productReferenceDataUrl = await fileToDataUrl(productReferencePath, productReference.mimeType || `image/${ext}`);
-  }
+  const productReferences = await productReferenceAssets(params);
+  const productDiagramUrl = productReferences?.diagram?.publicUrl || null;
+  const productReferenceUrl = productReferences?.hero?.publicUrl || null;
+  const productDiagramDataUrl = productReferences?.diagram
+    ? await fileToDataUrl(productReferences.diagram.path, productReferences.diagram.mimeType)
+    : null;
   const warnings = [];
   const referenceLimit = inputReferenceLimit(capabilities);
   if (referenceLimit <= 0) {
@@ -552,22 +560,22 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
     error.status = 400;
     throw error;
   }
-  let referenceDataUrls = [referenceDataUrl, overlayDataUrl];
-  let referenceMode = "overlay";
-  if (productReferenceDataUrl && referenceLimit >= 4) {
-    referenceDataUrls = [referenceDataUrl, overlayDataUrl, maskDataUrl, productReferenceDataUrl];
-    referenceMode = "overlay-mask-product";
-  } else if (productReferenceDataUrl && referenceLimit >= 3) {
-    referenceDataUrls = [referenceDataUrl, overlayDataUrl, productReferenceDataUrl];
-    referenceMode = "overlay-product";
-    warnings.push("Selected model accepts only 3 reference images; sent product reference and omitted binary mask because placement overlay is still included.");
-  } else if (referenceLimit >= 3) {
-    referenceDataUrls = [referenceDataUrl, overlayDataUrl, maskDataUrl];
-    referenceMode = "overlay-mask";
-  } else if (productReferenceDataUrl) {
-    warnings.push("Selected model accepts only 2 reference images; product reference image was not sent.");
+  const selectedReferences = selectGenerationReferences({
+    referenceLimit,
+    originalUrl: referenceDataUrl,
+    overlayUrl: overlayDataUrl,
+    maskUrl: maskDataUrl,
+    productDiagramUrl: productDiagramDataUrl
+  });
+  const referenceDataUrls = selectedReferences.map((item) => item.url);
+  const referenceRoles = selectedReferences.map((item) => item.role);
+  if (productDiagramDataUrl && !referenceRoles.includes("product-diagram")) {
+    warnings.push("Selected model could not accept the official product geometry diagram.");
   }
-  const prompt = buildPrompt({ params, zone, feedback, referenceMode });
+  if (!referenceRoles.includes("mask")) {
+    warnings.push("Selected model could not accept the binary mask; the placement overlay is still included.");
+  }
+  const prompt = buildPrompt({ params, zone, feedback, referenceRoles });
   const sourceAspectRatio = zone.imageWidth / zone.imageHeight;
 
   let payload;
@@ -598,7 +606,7 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
         capabilities,
         sourceAspectRatio,
         feedback,
-        referenceMode,
+        referenceRoles,
         abortSignal
       });
       warnings.push("Batch n>1 request was rejected; generated variants with parallel n=1 calls.");
@@ -618,7 +626,7 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
       capabilities,
       sourceAspectRatio,
       feedback,
-      referenceMode,
+      referenceRoles,
       abortSignal
     });
   }
@@ -670,6 +678,7 @@ export async function generateWithOpenRouter({ requestId, upload, params, zone, 
     maskUrl: `/generated/${maskFilename}`,
     overlayUrl: `/generated/${overlayFilename}`,
     productReferenceUrl,
+    productDiagramUrl,
     images,
     usage: payload.usage || null,
     warnings

@@ -13,9 +13,12 @@ FROM deps AS build
 COPY index.html tsconfig.json vite.config.ts ./
 COPY src ./src
 COPY public ./public
+COPY shared ./shared
 COPY server ./server
+COPY tests ./tests
 
 RUN pnpm typecheck
+RUN pnpm test
 RUN pnpm build
 RUN node --check server/index.js \
   && node --check server/openrouter.js \
@@ -42,6 +45,7 @@ RUN pnpm install --prod --frozen-lockfile
 
 COPY --from=build /app/dist ./dist
 COPY server ./server
+COPY shared ./shared
 
 RUN mkdir -p data/uploads data/generated \
   && chown -R node:node /app/data

@@ -1,25 +1,35 @@
 import {
   Archive,
   ArchiveRestore,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Clipboard,
   Clock3,
   Download,
   ImagePlus,
   Loader2,
+  Maximize2,
+  Moon,
   Pause,
   Play,
   RefreshCw,
   RotateCcw,
   ShieldAlert,
   Sparkles,
+  Sun,
   Target,
   Trash2,
   Trophy,
   Wand2,
-  XCircle
+  X,
+  XCircle,
+  ZoomIn,
+  ZoomOut
 } from "lucide-react";
 import { FormEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
+
+import poolProductsData from "../shared/pool-products.json";
 
 type Config = {
   mode: string;
@@ -77,6 +87,7 @@ type GenerationResult = {
   maskUrl?: string | null;
   overlayUrl?: string | null;
   productReferenceUrl?: string | null;
+  productDiagramUrl?: string | null;
   images: GeneratedImage[];
   latencyMs: number;
   usage?: Record<string, unknown> | null;
@@ -210,6 +221,7 @@ const defaultParams = {
   depthM: "",
   shape: "rectangular",
   style: "modern",
+  lighting: "day",
   materials: "светлая плитка, деревянный настил, немного зелени",
   notes: ""
 };
@@ -245,29 +257,11 @@ type PoolProduct = {
   lengthM: string;
   widthM: string;
   depthM: string;
-  shape: "rectangular";
+  shape: "rectangular" | "freeform";
   description: string;
 };
 
-const poolProducts: PoolProduct[] = [
-  { id: "luxor-6536", line: "Luxor", model: "LUXOR 6536", lengthM: "6.5", widthM: "3.6", depthM: "1.1-1.7", shape: "rectangular", description: "прямоугольная композитная чаша" },
-  { id: "luxor-7537", line: "Luxor", model: "LUXOR 7537", lengthM: "7.5", widthM: "3.7", depthM: "1.1-1.7", shape: "rectangular", description: "прямоугольная композитная чаша" },
-  { id: "luxor-8537", line: "Luxor", model: "LUXOR 8537", lengthM: "8.5", widthM: "3.7", depthM: "1.1-1.7", shape: "rectangular", description: "прямоугольная композитная чаша" },
-  { id: "luxor-9537", line: "Luxor", model: "LUXOR 9537", lengthM: "9.5", widthM: "3.7", depthM: "1.1-1.7", shape: "rectangular", description: "прямоугольная композитная чаша" },
-  { id: "luxor-10537", line: "Luxor", model: "LUXOR 10537", lengthM: "10.5", widthM: "3.7", depthM: "1.1-1.7", shape: "rectangular", description: "прямоугольная композитная чаша" },
-  { id: "minipool-4025", line: "Minipool", model: "Minipool 4025", lengthM: "4.0", widthM: "2.5", depthM: "1.3-1.5", shape: "rectangular", description: "компактная чаша для небольшого участка" },
-  { id: "minipool-4530", line: "Minipool", model: "Minipool 4530", lengthM: "4.5", widthM: "3.0", depthM: "1.5", shape: "rectangular", description: "компактная чаша для небольшого участка" },
-  { id: "minipool-5530", line: "Minipool", model: "Minipool 5530", lengthM: "5.5", widthM: "3.0", depthM: "1.5", shape: "rectangular", description: "компактная чаша для небольшого участка" },
-  { id: "minipool-6330", line: "Minipool", model: "Minipool 6330", lengthM: "6.3", widthM: "3.0", depthM: "1.5", shape: "rectangular", description: "компактная чаша для небольшого участка" },
-  { id: "classic-8537", line: "Classic", model: "Classic 8537", lengthM: "8.5", widthM: "3.7", depthM: "1.1-1.7", shape: "rectangular", description: "классическая прямоугольная чаша" },
-  { id: "rio-7737", line: "Rio", model: "RIO 7737", lengthM: "7.7", widthM: "3.7", depthM: "1.1-1.75", shape: "rectangular", description: "чаша с увеличенной зоной отдыха" },
-  { id: "rio-8737", line: "Rio", model: "RIO 8737", lengthM: "8.7", widthM: "3.7", depthM: "1.2-1.8", shape: "rectangular", description: "чаша с увеличенной зоной отдыха" },
-  { id: "rio-9737", line: "Rio", model: "RIO 9737", lengthM: "9.7", widthM: "3.7", depthM: "1.2-1.8", shape: "rectangular", description: "чаша с увеличенной зоной отдыха" },
-  { id: "quick-5025", line: "Quick", model: "QUICK 5025", lengthM: "5.0", widthM: "2.5", depthM: "1.5", shape: "rectangular", description: "узкий lap-pool для плавания" },
-  { id: "quick-6025", line: "Quick", model: "QUICK 6025", lengthM: "6.0", widthM: "2.5", depthM: "1.6", shape: "rectangular", description: "узкий lap-pool для плавания" },
-  { id: "quick-7025", line: "Quick", model: "QUICK 7025", lengthM: "7.0", widthM: "2.5", depthM: "1.6", shape: "rectangular", description: "узкий lap-pool для плавания" },
-  { id: "spa-4025", line: "Spa", model: "SPA 4025", lengthM: "4.0", widthM: "2.5", depthM: "1.0", shape: "rectangular", description: "компактная SPA-чаша" }
-];
+const poolProducts = poolProductsData as PoolProduct[];
 
 const emptyPoolProductParams = {
   poolModelId: "",
@@ -898,14 +892,30 @@ function isFallbackValidationHide(validation?: AutoRating | null) {
   return isFallbackValidationNoise(validation.notes) || (validation.issues || []).some(isFallbackValidationNoise);
 }
 
+function validationTextForUi(value?: string | null) {
+  return String(value || "")
+    .replace(
+      /Локальная проверка: вне выделенной зоны слишком сильно изменилась сцена(?:\s*\([^)]*\))?\.?/gi,
+      "Часть сцены за пределами контура сильно изменилась."
+    )
+    .replace(
+      /Локальная проверка: вне выделенной зоны есть заметные изменения(?:\s*\([^)]*\))?\.?/gi,
+      "За пределами контура есть заметные изменения."
+    )
+    .trim();
+}
+
 function validationNotesForUi(validation?: AutoRating | null) {
   if (!validation) return "";
   if (isFallbackValidationNoise(validation.notes)) return "Нужен ручной просмотр.";
-  return validation.notes || "";
+  return validationTextForUi(validation.notes);
 }
 
 function validationIssuesForUi(validation?: AutoRating | null) {
-  return (validation?.issues || []).filter((issue) => !isFallbackValidationNoise(issue));
+  return (validation?.issues || [])
+    .filter((issue) => !isFallbackValidationNoise(issue))
+    .map(validationTextForUi)
+    .filter(Boolean);
 }
 
 function ratingForImage(task: GenerationTask, image: GeneratedImage) {
@@ -914,6 +924,11 @@ function ratingForImage(task: GenerationTask, image: GeneratedImage) {
 
 function isManualRating(task: GenerationTask, imageId: string) {
   return Boolean(task.ratings?.[imageId]);
+}
+
+function hasCompleteManualReview(task: GenerationTask | null) {
+  const images = task?.result?.images || [];
+  return Boolean(images.length && task && images.every((image) => isManualRating(task, image.id)));
 }
 
 function actionFromRating(rating: Rating) {
@@ -970,11 +985,11 @@ function validationLabel(action?: AutoRating["action"]) {
 
 function precheckStatusLabel(status?: string, safety?: ReturnType<typeof safetyCountsForTask>) {
   if (safety) {
-    if (safety.hide) return "Есть скрытые";
+    if (safety.show) return safety.hide || safety.review ? "Есть готовые" : "Пройден";
     if (safety.review) return "Нужно ревью";
-    if (safety.show) return "Пройден";
+    if (safety.hide) return "Все скрыто";
   }
-  if (status === "blocked") return "Есть скрытые";
+  if (status === "blocked") return "Все скрыто";
   if (status === "review") return "Нужно ревью";
   if (status === "passed") return "Пройден";
   return "Ожидает";
@@ -1126,8 +1141,11 @@ export default function App() {
   const [selectedTaskId, setSelectedTaskId] = useState("");
   const [isPromptOpen, setPromptOpen] = useState(false);
   const [isTaskLoading, setTaskLoading] = useState(false);
+  const [lightboxImageId, setLightboxImageId] = useState("");
+  const [lightboxZoom, setLightboxZoom] = useState(1);
   const imageWrapRef = useRef<HTMLDivElement | null>(null);
   const promptBoxRef = useRef<HTMLDetailsElement | null>(null);
+  const lightboxCloseRef = useRef<HTMLButtonElement | null>(null);
   const noticeTimerRef = useRef<number | null>(null);
   const caseLoadSeqRef = useRef(0);
   const taskOpenSeqRef = useRef(0);
@@ -1199,10 +1217,12 @@ export default function App() {
     if (!selectedTask) {
       setFeedbackDraft("");
       setPromptOpen(false);
+      setLightboxImageId("");
       return;
     }
     setFeedbackDraft("");
     setPromptOpen(false);
+    setLightboxImageId("");
   }, [selectedTask?.id]);
 
   const activeZone = useMemo(() => {
@@ -1213,10 +1233,11 @@ export default function App() {
   }, [calibration, draft, imageSize, move, poolAspect, resize, zone]);
 
   const displayParams = useMemo(() => {
+    if (selectedPoolProduct) return params;
     if (calibration && activeZone && (draft || resize)) return paramsFromCalibratedZone(activeZone, imageSize, calibration, params);
     if (resize && activeZone) return paramsFromZoneScale(resize.origin, activeZone, resize.originParams);
     return params;
-  }, [activeZone, calibration, draft, imageSize, params, resize]);
+  }, [activeZone, calibration, draft, imageSize, params, resize, selectedPoolProduct]);
   const displayedPoolProduct = poolProductById(displayParams.poolModelId);
 
   const readiness = useMemo(() => {
@@ -1239,6 +1260,7 @@ export default function App() {
       : "";
 
   function updateParam(name: keyof typeof defaultParams, value: string) {
+    if (params.poolModelId && (name === "lengthM" || name === "widthM" || name === "shape")) return;
     beginDraftEdit();
     setDraft(null);
     setMove(null);
@@ -1569,11 +1591,13 @@ export default function App() {
       const nextZone = calibration ? resizeZoneFree(finalResize, imageSize) : resizeZone(finalResize, imageSize, poolAspect);
       if (nextZone.widthPct >= 0.04 && nextZone.heightPct >= 0.04) {
         setZone(nextZone);
-        setParams(
-          calibration
-            ? paramsFromCalibratedZone(nextZone, imageSize, calibration, finalResize.originParams)
-            : paramsFromZoneScale(finalResize.origin, nextZone, finalResize.originParams)
-        );
+        if (!selectedPoolProduct) {
+          setParams(
+            calibration
+              ? paramsFromCalibratedZone(nextZone, imageSize, calibration, finalResize.originParams)
+              : paramsFromZoneScale(finalResize.origin, nextZone, finalResize.originParams)
+          );
+        }
       }
       setResize(null);
       return;
@@ -1589,7 +1613,7 @@ export default function App() {
     const nextZone = calibration ? toFreeRect(finalDraft, imageSize) : toAspectRect(finalDraft, imageSize, poolAspect);
     if (nextZone.widthPct >= 0.04 && nextZone.heightPct >= 0.04) {
       setZone(nextZone);
-      if (calibration) setParams(paramsFromCalibratedZone(nextZone, imageSize, calibration, params));
+      if (calibration && !selectedPoolProduct) setParams(paramsFromCalibratedZone(nextZone, imageSize, calibration, params));
     }
     setDraft(null);
   }
@@ -1623,11 +1647,13 @@ export default function App() {
     const nextZone = calibration ? resizeZoneFree(finalResize, imageSize) : resizeZone(finalResize, imageSize, poolAspect);
     if (nextZone.widthPct >= 0.04 && nextZone.heightPct >= 0.04) {
       setZone(nextZone);
-      setParams(
-        calibration
-          ? paramsFromCalibratedZone(nextZone, imageSize, calibration, finalResize.originParams)
-          : paramsFromZoneScale(finalResize.origin, nextZone, finalResize.originParams)
-      );
+      if (!selectedPoolProduct) {
+        setParams(
+          calibration
+            ? paramsFromCalibratedZone(nextZone, imageSize, calibration, finalResize.originParams)
+            : paramsFromZoneScale(finalResize.origin, nextZone, finalResize.originParams)
+        );
+      }
     }
     setResize(null);
   }
@@ -2044,7 +2070,61 @@ export default function App() {
   const queuedCount = tasks.filter((task) => task.status === "queued").length;
   const selectedImages = selectedTask?.result?.images || [];
   const selectedSafety = safetyCountsForTask(selectedTask);
+  const selectedManualReviewComplete = hasCompleteManualReview(selectedTask);
   const visibleResultWarnings = (selectedTask?.result?.warnings || []).filter((warning) => !isNoisyResultWarning(warning));
+  const lightboxImages = selectedTask
+    ? selectedImages.filter((image) => effectiveValidationAction(selectedTask, image) !== "hide")
+    : [];
+  const activeLightboxImage = lightboxImages.find((image) => image.id === lightboxImageId) || null;
+  const lightboxIndex = activeLightboxImage
+    ? lightboxImages.findIndex((image) => image.id === activeLightboxImage.id)
+    : -1;
+  const lightboxImageIds = lightboxImages.map((image) => image.id).join("|");
+
+  function openLightbox(imageId: string) {
+    setLightboxImageId(imageId);
+  }
+
+  function closeLightbox() {
+    setLightboxImageId("");
+  }
+
+  function stepLightbox(direction: -1 | 1) {
+    if (lightboxImages.length < 2 || lightboxIndex < 0) return;
+    const nextIndex = (lightboxIndex + direction + lightboxImages.length) % lightboxImages.length;
+    setLightboxImageId(lightboxImages[nextIndex].id);
+  }
+
+  useEffect(() => {
+    if (!activeLightboxImage) return;
+    setLightboxZoom(1);
+    const timer = window.setTimeout(() => lightboxCloseRef.current?.focus(), 0);
+    return () => window.clearTimeout(timer);
+  }, [activeLightboxImage?.id]);
+
+  useEffect(() => {
+    if (!activeLightboxImage) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeLightbox();
+      if (event.key === "ArrowLeft") stepLightbox(-1);
+      if (event.key === "ArrowRight") stepLightbox(1);
+      if (event.key === "+" || event.key === "=") {
+        event.preventDefault();
+        setLightboxZoom((value) => Math.min(3, value + 0.5));
+      }
+      if (event.key === "-") {
+        event.preventDefault();
+        setLightboxZoom((value) => Math.max(1, value - 0.5));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeLightboxImage?.id, lightboxImageIds, lightboxIndex]);
 
   return (
     <main className="app-shell">
@@ -2326,20 +2406,35 @@ export default function App() {
                   <em>{selectedPoolProduct.lengthM.replace(".", ",")} x {selectedPoolProduct.widthM.replace(".", ",")} м · глубина {selectedPoolProduct.depthM.replaceAll(".", ",")} м</em>
                 </div>
               ) : null}
-              <label>
-                <span>Длина, м</span>
-                <input inputMode="decimal" value={params.lengthM} onChange={(event) => updateParam("lengthM", event.target.value)} />
-              </label>
-              <label>
-                <span>Ширина, м</span>
-                <input inputMode="decimal" value={params.widthM} onChange={(event) => updateParam("widthM", event.target.value)} />
-              </label>
-              <label>
-                <span>Форма</span>
-                <select value={params.shape} onChange={(event) => updateParam("shape", event.target.value)}>
-                  {shapeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                </select>
-              </label>
+              {!selectedPoolProduct ? (
+                <>
+                  <label>
+                    <span>Длина, м</span>
+                    <input inputMode="decimal" value={params.lengthM} onChange={(event) => updateParam("lengthM", event.target.value)} />
+                  </label>
+                  <label>
+                    <span>Ширина, м</span>
+                    <input inputMode="decimal" value={params.widthM} onChange={(event) => updateParam("widthM", event.target.value)} />
+                  </label>
+                  <label>
+                    <span>Форма</span>
+                    <select value={params.shape} onChange={(event) => updateParam("shape", event.target.value)}>
+                      {shapeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                    </select>
+                  </label>
+                </>
+              ) : null}
+              <div className="lighting-field wide">
+                <span>Освещение</span>
+                <div className="segmented-control lighting-control" role="group" aria-label="Освещение">
+                  <button type="button" className={params.lighting === "day" ? "active" : ""} aria-pressed={params.lighting === "day"} onClick={() => updateParam("lighting", "day")}>
+                    <Sun size={16} /> День
+                  </button>
+                  <button type="button" className={params.lighting === "night" ? "active" : ""} aria-pressed={params.lighting === "night"} onClick={() => updateParam("lighting", "night")}>
+                    <Moon size={16} /> Ночь
+                  </button>
+                </div>
+              </div>
               <label className="wide">
                 <span>Материалы</span>
                 <input
@@ -2520,7 +2615,9 @@ export default function App() {
               {selectedTask.result ? <span>{Math.round(selectedTask.result.latencyMs / 100) / 10}s</span> : null}
               {costUsd(selectedTask) !== null ? <span>{formatUsd(costUsd(selectedTask) as number)}</span> : null}
               {selectedTask.bestVariantId ? <span>Лучший: {selectedTask.result?.images.find((image) => image.id === selectedTask.bestVariantId)?.label}</span> : null}
-              {selectedTask.validation ? <span>Проверка: {precheckStatusLabel(selectedTask.validation.status, selectedSafety)}</span> : null}
+              {selectedTask.validation ? (
+                <span>{selectedManualReviewComplete ? "Ручной отбор" : "Проверка"}: {precheckStatusLabel(selectedTask.validation.status, selectedSafety)}</span>
+              ) : null}
             </div>
 
             {selectedTask.error?.message ? <div className="error">{selectedTask.error.message}</div> : null}
@@ -2529,7 +2626,7 @@ export default function App() {
             {selectedTask.status === "paused" ? <div className="soft-warning">Задача на паузе.</div> : null}
 
             {selectedTask.validation || selectedSafety ? (
-              <div className={`validation-summary ${selectedSafety?.hide ? "blocked" : selectedSafety?.review ? "review" : "passed"}`}>
+              <div className={`validation-summary ${selectedSafety?.show ? "passed" : selectedSafety?.review ? "review" : "blocked"}`}>
                 <ShieldAlert size={17} />
                 <div>
                   <strong>
@@ -2537,7 +2634,11 @@ export default function App() {
                       ? `Показ: ${selectedSafety.show} можно / ${selectedSafety.review} на ревью / ${selectedSafety.hide} скрыто`
                       : `Автопроверка: ${selectedTask.validation?.showCount || 0} ок / ${selectedTask.validation?.reviewCount || 0} на ревью / ${selectedTask.validation?.hiddenCount || 0} скрыто`}
                   </strong>
-                  <span>{selectedTask.validation?.summary || validationProviderLabel(selectedTask.validation?.provider)}</span>
+                  <span>
+                    {selectedManualReviewComplete
+                      ? "Оценки менеджера применены."
+                      : selectedTask.validation?.summary || validationProviderLabel(selectedTask.validation?.provider)}
+                  </span>
                 </div>
               </div>
             ) : null}
@@ -2600,7 +2701,16 @@ export default function App() {
                     <article className={`result-card ${isBest ? "best" : ""} ${effectiveAction} ${hiddenByPolicy ? "hidden-by-precheck" : ""}`} key={image.id}>
                       <figure className={hiddenByPolicy ? "hidden-figure" : ""}>
                         {!hiddenByPolicy ? (
-                          <img src={image.url} alt={`Вариант ${image.label}`} />
+                          <button
+                            type="button"
+                            className="image-open-button"
+                            title={`Открыть вариант ${image.label}`}
+                            aria-label={`Открыть вариант ${image.label}`}
+                            onClick={() => openLightbox(image.id)}
+                          >
+                            <img src={image.url} alt={`Вариант ${image.label}`} />
+                            <span className="image-open-indicator" aria-hidden="true"><Maximize2 size={17} /></span>
+                          </button>
                         ) : (
                           <div className="hidden-image">
                             <ShieldAlert size={30} />
@@ -2691,6 +2801,110 @@ export default function App() {
           </>
         )}
       </section>
+
+      {activeLightboxImage && selectedTask ? (
+        <div
+          className="lightbox-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeLightbox();
+          }}
+        >
+          <section
+            className="lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Просмотр варианта ${activeLightboxImage.label}`}
+          >
+            <header className="lightbox-header">
+              <div className="lightbox-heading">
+                <strong>Вариант {activeLightboxImage.label}</strong>
+                <span>{taskTitleForUi(selectedTask)} · {lightboxIndex + 1} из {lightboxImages.length}</span>
+              </div>
+              <div className="lightbox-toolbar">
+                <button
+                  type="button"
+                  title="Предыдущий вариант"
+                  aria-label="Предыдущий вариант"
+                  disabled={lightboxImages.length < 2}
+                  onClick={() => stepLightbox(-1)}
+                >
+                  <ChevronLeft size={19} />
+                </button>
+                <button
+                  type="button"
+                  title="Следующий вариант"
+                  aria-label="Следующий вариант"
+                  disabled={lightboxImages.length < 2}
+                  onClick={() => stepLightbox(1)}
+                >
+                  <ChevronRight size={19} />
+                </button>
+                <span className="lightbox-divider" />
+                <button
+                  type="button"
+                  title="Уменьшить"
+                  aria-label="Уменьшить"
+                  disabled={lightboxZoom <= 1}
+                  onClick={() => setLightboxZoom((value) => Math.max(1, value - 0.5))}
+                >
+                  <ZoomOut size={18} />
+                </button>
+                <span className="lightbox-zoom" aria-live="polite">
+                  {lightboxZoom === 1 ? "Вписано" : `${Math.round(lightboxZoom * 100)}%`}
+                </span>
+                <button
+                  type="button"
+                  title="Увеличить"
+                  aria-label="Увеличить"
+                  disabled={lightboxZoom >= 3}
+                  onClick={() => setLightboxZoom((value) => Math.min(3, value + 0.5))}
+                >
+                  <ZoomIn size={18} />
+                </button>
+                <button
+                  type="button"
+                  title="Вписать в окно"
+                  aria-label="Вписать в окно"
+                  disabled={lightboxZoom === 1}
+                  onClick={() => setLightboxZoom(1)}
+                >
+                  <RotateCcw size={17} />
+                </button>
+                <a
+                  href={activeLightboxImage.url}
+                  download={filenameFromUrl(activeLightboxImage.url, `${selectedTask.caseId}-${activeLightboxImage.label}.png`)}
+                  title="Скачать оригинал"
+                  aria-label="Скачать оригинал"
+                >
+                  <Download size={18} />
+                </a>
+                <button
+                  ref={lightboxCloseRef}
+                  type="button"
+                  className="lightbox-close"
+                  title="Закрыть"
+                  aria-label="Закрыть"
+                  onClick={closeLightbox}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </header>
+            <div className="lightbox-viewport">
+              <div className={`lightbox-canvas ${lightboxZoom > 1 ? "zoomed" : ""}`}>
+                <img
+                  src={activeLightboxImage.url}
+                  alt={`Вариант ${activeLightboxImage.label} в полном размере`}
+                  draggable={false}
+                  style={lightboxZoom > 1
+                    ? { width: `${lightboxZoom * 100}%`, maxWidth: "none", maxHeight: "none" }
+                    : undefined}
+                />
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }

@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import sharp from "sharp";
+
 import { DEFAULTS, envInt, envString, generationMode } from "./config.js";
 
 const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -14,8 +16,18 @@ function mimeTypeFor(filePath, fallback = "image/jpeg") {
 }
 
 async function fileToDataUrl(filePath, mimeType) {
-  const bytes = await fs.readFile(filePath);
-  return `data:${mimeType};base64,${bytes.toString("base64")}`;
+  try {
+    const bytes = await sharp(filePath)
+      .rotate()
+      .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+      .flatten({ background: "#ffffff" })
+      .jpeg({ quality: 84, chromaSubsampling: "4:2:0" })
+      .toBuffer();
+    return `data:image/jpeg;base64,${bytes.toString("base64")}`;
+  } catch {
+    const bytes = await fs.readFile(filePath);
+    return `data:${mimeType};base64,${bytes.toString("base64")}`;
+  }
 }
 
 function parsePositiveNumber(value, fallback) {
@@ -178,6 +190,7 @@ function placementPrompt({ params, currentZone }) {
     "Coordinates must be relative to the full image: xPct, yPct, widthPct, heightPct from 0 to 1.",
     "Return JSON only, no markdown.",
     `Requested pool: ${params.lengthM}m x ${params.widthM}m, shape=${shapeLabel}.`,
+    params.poolModelName ? `Fixed customer catalog shell: ${params.poolModelName}; dimensions must remain fixed.` : "",
     `Materials/wishes in Russian: ${params.materials || ""}. ${params.notes || ""}`,
     currentZone
       ? `Current visible footprint to improve: xPct=${currentZone.xPct}, yPct=${currentZone.yPct}, widthPct=${currentZone.widthPct}, heightPct=${currentZone.heightPct}.`

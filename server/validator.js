@@ -4,7 +4,7 @@ import path from "node:path";
 import sharp from "sharp";
 
 import { DEFAULTS, envInt, envString } from "./config.js";
-import { productPromptDetails } from "./pool-catalog.js";
+import { productPromptDetails, productReferenceAssets } from "./pool-catalog.js";
 
 const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
 const scoreKeys = ["preservation", "zone", "realism", "params", "artifacts"];
@@ -33,6 +33,16 @@ async function fileToDataUrl(filePath, mimeType) {
   return `data:${mimeType};base64,${bytes.toString("base64")}`;
 }
 
+async function fileToVisionDataUrl(filePath) {
+  const buffer = await sharp(filePath)
+    .rotate()
+    .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+    .flatten({ background: "#ffffff" })
+    .jpeg({ quality: 84, chromaSubsampling: "4:2:0" })
+    .toBuffer();
+  return `data:image/jpeg;base64,${buffer.toString("base64")}`;
+}
+
 function localFilePathFromUrl(dataDir, url) {
   if (!url || typeof url !== "string") return null;
   if (!url.startsWith("/uploads/") && !url.startsWith("/generated/")) return null;
@@ -44,7 +54,7 @@ async function imageUrlForValidation(dataDir, url, fallbackMimeType = "image/jpe
   if (url.startsWith("data:") || url.startsWith("http://") || url.startsWith("https://")) return url;
   const filePath = localFilePathFromUrl(dataDir, url);
   if (!filePath) return null;
-  return fileToDataUrl(filePath, mimeTypeFor(filePath, fallbackMimeType));
+  return fileToVisionDataUrl(filePath).catch(() => fileToDataUrl(filePath, mimeTypeFor(filePath, fallbackMimeType)));
 }
 
 function clampScore(value, fallback = 3) {
@@ -155,14 +165,14 @@ function localAssessment(image, mode = "review") {
   return normalizeAssessment(base, image, "local-precheck");
 }
 
-async function readRgbAtSize(filePath, width, height) {
-  const { data } = await sharp(filePath)
+async function readComparisonAtSize(filePath, width, height, normalizeLighting) {
+  let pipeline = sharp(filePath)
     .rotate()
-    .resize(width, height, { fit: "fill" })
-    .removeAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  return data;
+    .resize(width, height, { fit: "fill" });
+  if (normalizeLighting) pipeline = pipeline.greyscale().normalize();
+  else pipeline = pipeline.removeAlpha();
+  const { data, info } = await pipeline.raw().toBuffer({ resolveWithObject: true });
+  return { data, channels: info.channels };
 }
 
 async function readMaskAtSize(filePath, width, height) {
@@ -174,66 +184,144 @@ async function readMaskAtSize(filePath, width, height) {
   return data;
 }
 
-async function measureOutsideMaskChange({ originalPath, generatedPath, maskPath }) {
+async function measureOutsideMaskChange({ originalPath, generatedPath, maskPath, lighting }) {
   if (!originalPath || !generatedPath || !maskPath) return null;
   const metadata = await sharp(originalPath).metadata();
-  const width = metadata.width;
-  const height = metadata.height;
-  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) return null;
-
-  const original = await readRgbAtSize(originalPath, width, height);
-  const generated = await readRgbAtSize(generatedPath, width, height);
+  const sourceWidth = metadata.width;
+  const sourceHeight = metadata.height;
+  if (!Number.isFinite(sourceWidth) || !Number.isFinite(sourceHeight) || sourceWidth <= 0 || sourceHeight <= 0) return null;
+  const scale = Math.min(1, 900 / Math.max(sourceWidth, sourceHeight));
+  const width = Math.max(1, Math.round(sourceWidth * scale));
+  const height = Math.max(1, Math.round(sourceHeight * scale));
+  const normalizeLighting = lighting === "night";
+  const original = await readComparisonAtSize(originalPath, width, height, normalizeLighting);
+  const generated = await readComparisonAtSize(generatedPath, width, height, normalizeLighting);
+  const channels = Math.min(original.channels, generated.channels);
   const mask = await readMaskAtSize(maskPath, width, height);
+  let minMaskX = width;
+  let minMaskY = height;
+  let maxMaskX = -1;
+  let maxMaskY = -1;
+  for (let pixel = 0; pixel < mask.length; pixel += 1) {
+    if (mask[pixel] < 20) continue;
+    const x = pixel % width;
+    const y = Math.floor(pixel / width);
+    minMaskX = Math.min(minMaskX, x);
+    minMaskY = Math.min(minMaskY, y);
+    maxMaskX = Math.max(maxMaskX, x);
+    maxMaskY = Math.max(maxMaskY, y);
+  }
+  if (maxMaskX < minMaskX || maxMaskY < minMaskY) return null;
+
+  const edgeMargin = Math.max(
+    16,
+    Math.round(Math.min(maxMaskX - minMaskX + 1, maxMaskY - minMaskY + 1) * 0.35)
+  );
+  const edgeMetrics = Object.fromEntries(
+    ["top", "bottom", "left", "right"].map((edge) => [edge, { count: 0, diffSum: 0, highDiffCount: 0, veryHighDiffCount: 0 }])
+  );
   let outsideCount = 0;
   let diffSum = 0;
   let highDiffCount = 0;
   let veryHighDiffCount = 0;
 
-  for (let i = 0, pixel = 0; pixel < mask.length; pixel += 1, i += 3) {
+  for (let pixel = 0; pixel < mask.length; pixel += 1) {
     if (mask[pixel] >= 20) continue;
-    const diff = (
-      Math.abs(original[i] - generated[i]) +
-      Math.abs(original[i + 1] - generated[i + 1]) +
-      Math.abs(original[i + 2] - generated[i + 2])
-    ) / 3;
+    let pixelDiff = 0;
+    for (let channel = 0; channel < channels; channel += 1) {
+      pixelDiff += Math.abs(
+        original.data[pixel * original.channels + channel] -
+        generated.data[pixel * generated.channels + channel]
+      );
+    }
+    const diff = pixelDiff / channels;
+    const x = pixel % width;
+    const y = Math.floor(pixel / width);
     outsideCount += 1;
     diffSum += diff;
     if (diff > 45) highDiffCount += 1;
     if (diff > 70) veryHighDiffCount += 1;
+
+    const edges = [];
+    if (x >= minMaskX && x <= maxMaskX && y >= Math.max(0, minMaskY - edgeMargin) && y < minMaskY) edges.push("top");
+    if (x >= minMaskX && x <= maxMaskX && y > maxMaskY && y <= Math.min(height - 1, maxMaskY + edgeMargin)) edges.push("bottom");
+    if (y >= minMaskY && y <= maxMaskY && x >= Math.max(0, minMaskX - edgeMargin) && x < minMaskX) edges.push("left");
+    if (y >= minMaskY && y <= maxMaskY && x > maxMaskX && x <= Math.min(width - 1, maxMaskX + edgeMargin)) edges.push("right");
+    for (const edge of edges) {
+      const metric = edgeMetrics[edge];
+      metric.count += 1;
+      metric.diffSum += diff;
+      if (diff > 45) metric.highDiffCount += 1;
+      if (diff > 70) metric.veryHighDiffCount += 1;
+    }
   }
 
   if (!outsideCount) return null;
+  const normalizedEdges = Object.fromEntries(
+    Object.entries(edgeMetrics).map(([edge, metric]) => [
+      edge,
+      metric.count
+        ? {
+            meanDiff: metric.diffSum / metric.count,
+            highDiffRatio: metric.highDiffCount / metric.count,
+            veryHighDiffRatio: metric.veryHighDiffCount / metric.count
+          }
+        : { meanDiff: 0, highDiffRatio: 0, veryHighDiffRatio: 0 }
+    ])
+  );
+  const strongestEdge = Object.entries(normalizedEdges).reduce((strongest, current) => (
+    current[1].veryHighDiffRatio > strongest[1].veryHighDiffRatio ? current : strongest
+  ));
   return {
     outsideMeanDiff: diffSum / outsideCount,
     outsideHighDiffRatio: highDiffCount / outsideCount,
-    outsideVeryHighDiffRatio: veryHighDiffCount / outsideCount
+    outsideVeryHighDiffRatio: veryHighDiffCount / outsideCount,
+    strongestEdge: strongestEdge[0],
+    edgeMeanDiff: strongestEdge[1].meanDiff,
+    edgeHighDiffRatio: strongestEdge[1].highDiffRatio,
+    edgeVeryHighDiffRatio: strongestEdge[1].veryHighDiffRatio
   };
 }
 
-async function localImageGuard({ image, dataDir, originalPath, maskUrl }) {
+export function classifyOutsideMaskMetric(metric) {
+  if (!metric) return null;
+  const globalHide = metric.outsideMeanDiff > 40
+    || metric.outsideHighDiffRatio > 0.3
+    || metric.outsideVeryHighDiffRatio > 0.18;
+  const edgeHide = metric.edgeHighDiffRatio > 0.24 && metric.edgeVeryHighDiffRatio > 0.18;
+  if (globalHide || edgeHide) return "hide";
+
+  const globalReview = metric.outsideMeanDiff > 26
+    || metric.outsideHighDiffRatio > 0.18
+    || metric.outsideVeryHighDiffRatio > 0.08;
+  const edgeReview = metric.edgeHighDiffRatio > 0.09 && metric.edgeVeryHighDiffRatio > 0.055;
+  if (globalReview || edgeReview) return "review";
+  return null;
+}
+
+async function localImageGuard({ image, dataDir, originalPath, maskUrl, lighting }) {
   const generatedPath = localFilePathFromUrl(dataDir, image.url);
   const maskPath = localFilePathFromUrl(dataDir, maskUrl);
   if (!generatedPath || !maskPath) return null;
   try {
-    const metric = await measureOutsideMaskChange({ originalPath, generatedPath, maskPath });
+    const metric = await measureOutsideMaskChange({ originalPath, generatedPath, maskPath, lighting });
     if (!metric) return null;
-    const { outsideMeanDiff, outsideHighDiffRatio, outsideVeryHighDiffRatio } = metric;
-    const metricText = `outside mean=${outsideMeanDiff.toFixed(1)}, high=${Math.round(outsideHighDiffRatio * 100)}%, veryHigh=${Math.round(outsideVeryHighDiffRatio * 100)}%`;
-    if (outsideMeanDiff > 40 || outsideHighDiffRatio > 0.3 || outsideVeryHighDiffRatio > 0.18) {
+    const action = classifyOutsideMaskMetric(metric);
+    if (action === "hide") {
       return {
         action: "hide",
         preservation: 1,
         zone: 2,
-        issue: `Локальная проверка: вне выделенной зоны слишком сильно изменилась сцена (${metricText}).`,
+        issue: "Часть сцены за пределами контура сильно изменилась.",
         metric
       };
     }
-    if (outsideMeanDiff > 26 || outsideHighDiffRatio > 0.18 || outsideVeryHighDiffRatio > 0.08) {
+    if (action === "review") {
       return {
         action: "review",
         preservation: 3,
         zone: 3,
-        issue: `Локальная проверка: вне выделенной зоны есть заметные изменения (${metricText}).`,
+        issue: "За пределами контура есть заметные изменения.",
         metric
       };
     }
@@ -243,11 +331,11 @@ async function localImageGuard({ image, dataDir, originalPath, maskUrl }) {
   }
 }
 
-async function buildLocalGuards({ images, dataDir, originalPath, maskUrl, abortSignal }) {
+async function buildLocalGuards({ images, dataDir, originalPath, maskUrl, lighting, abortSignal }) {
   const entries = [];
   for (const image of images) {
     throwIfAborted(abortSignal);
-    const guard = await localImageGuard({ image, dataDir, originalPath, maskUrl });
+    const guard = await localImageGuard({ image, dataDir, originalPath, maskUrl, lighting });
     if (guard) entries.push([image.id, guard]);
   }
   return Object.fromEntries(entries);
@@ -303,26 +391,33 @@ function parseJsonObject(text) {
 
 function validationPrompt({ params, zone, images }) {
   const productDetails = productPromptDetails(params);
+  const nightMode = params.lighting === "night";
   return [
     "You are a practical QA validator for a pool image-editing demo.",
     "Compare the original photo, the black/white placement mask, and each generated variant.",
-    "The white mask area is the only allowed area for placing or editing the pool.",
+    nightMode
+      ? "The white mask area is the only allowed area for pool geometry; coherent global relighting is allowed outside it, but structural or object changes are not."
+      : "The white mask area is the only allowed area for placing or editing the pool.",
     "The goal is not beauty alone. The goal is faithful photo editing of the user's real yard.",
     "Score each generated variant from 1 to 5 using these exact criteria:",
-    "preservation: 1 means original yard/house/fence/camera strongly changed, 5 means house/fence/perspective are preserved.",
+    nightMode
+      ? "preservation: night relighting is requested and allowed; 1 means yard geometry/house/fence/camera/objects changed, 5 means all structures and positions are preserved despite coherent night lighting."
+      : "preservation: 1 means original yard/house/fence/camera strongly changed, 5 means house/fence/perspective and lighting are preserved.",
     "zone: 1 means the pool is outside or overlaps wrong objects, 5 means fully inside the selected zone.",
     "realism: 1 means obvious AI artifact, 5 means plausible photo/visualization.",
-    "params: 1 means selected catalog model/shape/style/materials do not match, 5 means requested River Pools line/model proportions, shape, finish, and materials match.",
+    "params: 1 means selected catalog model/shape/materials do not match, 5 means the fixed River Pools model dimensions, top-view outline, steps, ledges, proportions, and requested materials match.",
     "artifacts: 1 means major artifacts/text/warping/labels, 5 means no gross artifacts.",
     "sendable must be true only when every score is at least 4, the pool is inside the mask/zone, and the original yard is preserved.",
     "action must be one of: show, review, hide.",
     "Use action=show when preservation>=4, zone>=4, realism>=4, params>=4, artifacts>=4, and the image is acceptable for manager review.",
     "Use action=review for borderline variants, minor scene changes, imperfect materials, small realism issues, added unrequested furniture/lights/decor, any score 3, or low confidence.",
-    "Use action=hide only for clear severe hallucinations: pool on fence/house/wall, mostly outside zone, broken perspective, changed building/fence/house/trees, full-scene redesign, changed color mode, labels/text, impossible geometry, or major artifacts.",
+    nightMode
+      ? "Use action=hide only for clear severe hallucinations: pool on fence/house/wall, mostly outside zone, broken perspective, changed building/fence/house/trees/objects, full-scene redesign beyond lighting, labels/text, impossible geometry, or major artifacts."
+      : "Use action=hide only for clear severe hallucinations: pool on fence/house/wall, mostly outside zone, broken perspective, changed building/fence/house/trees, full-scene redesign, changed color mode, labels/text, impossible geometry, or major artifacts.",
     "If unsure between review and hide, choose review. The demo should hide only images a manager should not see by default.",
     "Return notes and issues in Russian.",
     "Return JSON only, no markdown.",
-    `Requested pool: ${params.lengthM}m x ${params.widthM}m, shape=${params.shape}, style=${params.style}, materials=${params.materials}.`,
+    `Requested pool: ${params.lengthM}m x ${params.widthM}m, shape=${params.shape}, lighting=${params.lighting || "day"}, materials=${params.materials}.`,
     productDetails ? `Selected River Pools product: ${productDetails}.` : "",
     `Selected zone: x=${zone.x}, y=${zone.y}, width=${zone.width}, height=${zone.height}.`,
     `Variants: ${images.map((image) => `${image.id} label ${image.label}`).join("; ")}.`,
@@ -404,10 +499,13 @@ export function ratingFromAuto(autoRating) {
 }
 
 export function buildRegenerationFeedback({ sourceTask, userFeedback = "", ratings = null, bestVariantId = "" }) {
+  const nightMode = sourceTask.params?.lighting === "night";
   const lines = [
     "Строгие ограничения для перегенерации:",
     "Не повторять заблокированные или спорные композиции из прошлого запуска.",
-    "Сохранить исходный двор, забор, дом, деревья, ракурс камеры, освещение и цветность фото.",
+    nightMode
+      ? "Сохранить исходный двор, забор, дом, деревья, объекты и ракурс камеры; менять только освещение для реалистичного ночного вида."
+      : "Сохранить исходный двор, забор, дом, деревья, ракурс камеры, освещение и цветность фото.",
     "Держать бассейн и все правки полностью внутри выделенной зоны."
   ];
   const userText = String(userFeedback || "").trim();
@@ -461,6 +559,7 @@ export async function validateGeneratedImages({
     dataDir,
     originalPath,
     maskUrl: result.maskUrl,
+    lighting: task.params?.lighting || "day",
     abortSignal
   });
   if (!shouldUseOpenRouter) {
@@ -471,21 +570,29 @@ export async function validateGeneratedImages({
     );
     return {
       autoRatings,
-      summary: summarize(autoRatings, validationMode === "off" ? "disabled" : "local-precheck"),
+      summary: summarizeValidation(autoRatings, validationMode === "off" ? "disabled" : "local-precheck"),
       warnings: []
     };
   }
 
   try {
     throwIfAborted(abortSignal);
-    const originalUrl = await fileToDataUrl(originalPath, originalMimeType || mimeTypeFor(originalPath));
+    const originalUrl = await fileToVisionDataUrl(originalPath).catch(() => fileToDataUrl(originalPath, originalMimeType || mimeTypeFor(originalPath)));
     const maskUrl = result.maskUrl ? await imageUrlForValidation(dataDir, result.maskUrl, "image/png") : null;
+    const productReferences = await productReferenceAssets(task.params);
+    const productDiagramUrl = productReferences?.diagram
+      ? await fileToVisionDataUrl(productReferences.diagram.path)
+      : null;
     const content = [{ type: "text", text: validationPrompt({ params: task.params, zone: task.zone, images }) }];
     content.push({ type: "text", text: "Original photo:" });
     content.push({ type: "image_url", image_url: { url: originalUrl } });
     if (maskUrl) {
       content.push({ type: "text", text: "Placement mask:" });
       content.push({ type: "image_url", image_url: { url: maskUrl } });
+    }
+    if (productDiagramUrl) {
+      content.push({ type: "text", text: "Official product top-view geometry diagram:" });
+      content.push({ type: "image_url", image_url: { url: productDiagramUrl } });
     }
     for (const image of images) {
       const generatedUrl = await imageUrlForValidation(dataDir, image.url, "image/png");
@@ -516,7 +623,7 @@ export async function validateGeneratedImages({
       autoRatings[image.id] = normalizeAssessment(raw, image, `openrouter:${model}`);
     }
     const guardedRatings = applyLocalGuards(autoRatings, localGuards);
-    const summary = summarize(guardedRatings, `openrouter:${model}`, parsed.summary);
+    const summary = summarizeValidation(guardedRatings, `openrouter:${model}`, parsed.summary);
     return { autoRatings: guardedRatings, summary, warnings: [] };
   } catch (error) {
     if (error.status === 499) throw error;
@@ -526,19 +633,19 @@ export async function validateGeneratedImages({
     );
     return {
       autoRatings,
-      summary: summarize(autoRatings, "validation-failed"),
+      summary: summarizeValidation(autoRatings, "validation-failed"),
       warnings: [`Автопроверка перешла в ручной режим: ${error.message || "неизвестная ошибка валидатора"}.`]
     };
   }
 }
 
-function summarize(autoRatings, provider, text = "") {
+export function summarizeValidation(autoRatings, provider, text = "") {
   const ratings = Object.values(autoRatings);
   const hiddenCount = ratings.filter((rating) => rating.action === "hide").length;
   const reviewCount = ratings.filter((rating) => rating.action === "review").length;
   const showCount = ratings.filter((rating) => rating.action === "show").length;
   return {
-    status: hiddenCount ? "blocked" : reviewCount ? "review" : "passed",
+    status: showCount ? "passed" : reviewCount ? "review" : hiddenCount ? "blocked" : "skipped",
     provider,
     hiddenCount,
     reviewCount,

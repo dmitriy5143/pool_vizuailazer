@@ -12,6 +12,7 @@ import { generateMockImages } from "./mock-generator.js";
 import { readImageDimensions } from "./image-metadata.js";
 import { generateWithOpenRouter } from "./openrouter.js";
 import { defaultPlacementZone, suggestPlacementZone } from "./placement.js";
+import { canonicalizePoolParams } from "./pool-catalog.js";
 import { buildRegenerationFeedback, validateGeneratedImages } from "./validator.js";
 
 dotenv.config();
@@ -26,6 +27,7 @@ const requestsPath = path.join(dataDir, "requests.json");
 const tasksPath = path.join(dataDir, "tasks.json");
 const allowedShapes = new Set(["rectangular", "oval", "freeform"]);
 const allowedStyles = new Set(["modern", "premium", "family", "natural", "evening"]);
+const allowedLighting = new Set(["day", "night"]);
 const maxImagePixels = envInt("MAX_UPLOAD_IMAGE_PIXELS", DEFAULTS.maxUploadImagePixels, 1, 80_000_000);
 const requestHistoryLimit = envInt("REQUEST_HISTORY_LIMIT", DEFAULTS.requestHistoryLimit, 1, 500);
 const maxVariantCount = envInt("MAX_VARIANT_COUNT", DEFAULTS.maxVariantCount, 1, 100);
@@ -132,7 +134,7 @@ function numberFromUser(value) {
 function normalizeGenerationParams(params = {}) {
   const safeParams = { ...(params || {}) };
   delete safeParams[["price", "Rub"].join("")];
-  return {
+  const normalized = {
     ...safeParams,
     lengthM: String(numberFromUser(safeParams.lengthM)),
     widthM: String(numberFromUser(safeParams.widthM)),
@@ -141,9 +143,11 @@ function normalizeGenerationParams(params = {}) {
     poolModelName: safeText(safeParams.poolModelName, "", 160),
     poolModelLine: safeText(safeParams.poolModelLine, "", 120),
     poolFinish: safeText(safeParams.poolFinish, "", 160),
+    lighting: safeText(safeParams.lighting, "day", 20),
     materials: safeText(safeParams.materials, "", 1000),
     notes: safeText(safeParams.notes, "", 2000)
   };
+  return canonicalizePoolParams(normalized);
 }
 
 function normalizeZone(rawZone, imageSize) {
@@ -193,6 +197,9 @@ function validateGenerationInput(params, zone, variants) {
   }
   if (!allowedStyles.has(params.style)) {
     throw createBadRequest("Такой стиль не поддерживается в демо.");
+  }
+  if (!allowedLighting.has(params.lighting || "day")) {
+    throw createBadRequest("Такой режим освещения не поддерживается в демо.");
   }
 
   if (typeof params.materials !== "string" || params.materials.trim().length < 6) {
@@ -532,6 +539,7 @@ async function runGenerationTask(task, abortSignal) {
       maskUrl: result.maskUrl || null,
       overlayUrl: result.overlayUrl || null,
       productReferenceUrl: result.productReferenceUrl || null,
+      productDiagramUrl: result.productDiagramUrl || null,
       guideUrl: result.guideUrl || null,
       images,
       usage: result.usage,
@@ -671,6 +679,9 @@ function taskFiles(task) {
   const urls = [
     task.upload?.url,
     task.result?.maskUrl,
+    task.result?.overlayUrl,
+    task.result?.productReferenceUrl,
+    task.result?.productDiagramUrl,
     task.result?.guideUrl,
     ...(task.result?.images || []).map((image) => image.url)
   ];
@@ -684,6 +695,9 @@ async function deleteTaskFiles(task) {
 async function deleteGeneratedResultFiles(result) {
   const urls = [
     result?.maskUrl,
+    result?.overlayUrl,
+    result?.productReferenceUrl,
+    result?.productDiagramUrl,
     result?.guideUrl,
     ...(result?.images || []).map((image) => image.url)
   ];
@@ -783,7 +797,6 @@ app.post("/api/tasks", async (req, res, next) => {
     const imageSize = await readImageDimensions(req.file.path);
     const rawNormalizedZone = normalizeZone(rawZone, imageSize);
     const variants = parseVariantCount(req.body.variants);
-    validateGenerationInput(params, rawNormalizedZone, variants);
     const normalizedParams = normalizeGenerationParams(params);
     const zone = rawNormalizedZone;
     validateGenerationInput(normalizedParams, zone, variants);
@@ -1034,83 +1047,6 @@ app.get("/api/history/:id", async (req, res, next) => {
     res.json(record);
   } catch (error) {
     next(error);
-  }
-});
-
-app.post("/api/generate", async (req, res) => {
-  const startedAt = Date.now();
-  try {
-    await runUpload(req, res);
-    if (!req.file) {
-      res.status(400).json({ error: "Загрузите фото участка." });
-      return;
-    }
-
-    const params = parseJsonField(req.body.params, {}, "params");
-    const rawZone = parseJsonField(req.body.zone, null, "zone");
-    const imageSize = await readImageDimensions(req.file.path);
-    const rawNormalizedZone = normalizeZone(rawZone, imageSize);
-    const variants = parseVariantCount(req.body.variants);
-    const requestId = crypto.randomUUID();
-    const mode = generationMode();
-    const runLabel = safeText(req.body.runLabel, `RUN-${requestId.slice(0, 8)}`);
-    const caseId = safeText(req.body.caseId, "manual", 80);
-
-    validateGenerationInput(params, rawNormalizedZone, variants);
-    const normalizedParams = normalizeGenerationParams(params);
-    const zone = rawNormalizedZone;
-    validateGenerationInput(normalizedParams, zone, variants);
-
-    const generator = mode === "openrouter" ? generateWithOpenRouter : generateMockImages;
-    const result = await generator({
-      requestId,
-      upload: req.file,
-      params: normalizedParams,
-      zone,
-      variants,
-      outputDir: generatedDir
-    });
-
-    const record = {
-      id: requestId,
-      status: "succeeded",
-      runLabel,
-      caseId,
-      provider: result.provider,
-      model: result.model,
-      prompt: result.prompt,
-      params: normalizedParams,
-      zone,
-      upload: `/uploads/${path.basename(req.file.path)}`,
-      maskUrl: result.maskUrl || null,
-      overlayUrl: result.overlayUrl || null,
-      productReferenceUrl: result.productReferenceUrl || null,
-      guideUrl: result.guideUrl || null,
-      images: result.images,
-      usage: result.usage,
-      costUsd: usageCostUsd(result.usage),
-      warnings: result.warnings || [],
-      latencyMs: Date.now() - startedAt,
-      createdAt: new Date().toISOString()
-    };
-    await appendRequest(record);
-
-    res.json(record);
-  } catch (error) {
-    await removeUploadedFile(req.file);
-    const status =
-      error.status ||
-      (error.name === "MulterError" ? 400 : 500);
-    if (status >= 500) {
-      console.error(error);
-    }
-    const message = error.name === "MulterError" && error.code === "LIMIT_FILE_SIZE"
-      ? "Фото больше 15 MB."
-      : error.message || "Генерация не удалась.";
-    res.status(status).json({
-      error: message,
-      details: error.payload || undefined
-    });
   }
 });
 

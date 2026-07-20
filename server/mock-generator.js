@@ -21,12 +21,13 @@ function escapeXml(value) {
 
 export async function generateMockImages({ requestId, upload, params, zone, variants, outputDir, feedback = "", abortSignal }) {
   if (abortSignal?.aborted) throw new Error("Generation was aborted.");
-  const prompt = buildPrompt({ params, zone, feedback, referenceMode: "mask" });
+  const prompt = buildPrompt({ params, zone, feedback, referenceRoles: ["original", "mask"] });
   const imageHref = `/uploads/${path.basename(upload.path)}`;
   const maskWidth = Math.max(1, Math.round(Number(zone.imageWidth) || 1280));
   const maskHeight = Math.max(1, Math.round(Number(zone.imageHeight) || 820));
   const maskFilename = `${requestId}-zone-mask.png`;
   await fs.writeFile(path.join(outputDir, maskFilename), createZoneMaskPng(zone, maskWidth, maskHeight, params.shape));
+  const nightMode = params.lighting === "night";
 
   const images = await Promise.all(Array.from({ length: variants }, async (_value, index) => {
     if (abortSignal?.aborted) throw new Error("Generation was aborted.");
@@ -58,7 +59,7 @@ export async function generateMockImages({ requestId, upload, params, zone, vari
   </defs>
   <rect width="${maskWidth}" height="${maskHeight}" fill="#dbe6ea"/>
   <image href="${escapeXml(imageHref)}" x="0" y="0" width="${maskWidth}" height="${maskHeight}" preserveAspectRatio="none" opacity="0.78"/>
-  <rect x="0" y="0" width="${maskWidth}" height="${maskHeight}" fill="#0f172a" opacity="0.08"/>
+  <rect x="0" y="0" width="${maskWidth}" height="${maskHeight}" fill="#07111f" opacity="${nightMode ? "0.58" : "0.08"}"/>
   <g filter="url(#shadow)">
     ${poolShape}
     <path d="M ${x + 30} ${y + height * 0.35} C ${x + width * 0.35} ${y + height * 0.18}, ${x + width * 0.65} ${y + height * 0.58}, ${x + width - 28} ${y + height * 0.35}" fill="none" stroke="#e0f7ff" stroke-width="5" opacity="0.7"/>
